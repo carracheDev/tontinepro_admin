@@ -2,20 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'https://difficult-marley-carrachedevpro-a2bb029d.koyeb.app'
 
-export async function GET(req: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return proxy(req, params.proxy)
+type Context = { params: Promise<{ proxy: string[] }> }
+
+export async function GET(req: NextRequest, ctx: Context) {
+  return proxy(req, (await ctx.params).proxy)
 }
-export async function POST(req: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return proxy(req, params.proxy)
+export async function POST(req: NextRequest, ctx: Context) {
+  return proxy(req, (await ctx.params).proxy)
 }
-export async function PUT(req: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return proxy(req, params.proxy)
+export async function PUT(req: NextRequest, ctx: Context) {
+  return proxy(req, (await ctx.params).proxy)
 }
-export async function DELETE(req: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return proxy(req, params.proxy)
+export async function DELETE(req: NextRequest, ctx: Context) {
+  return proxy(req, (await ctx.params).proxy)
 }
-export async function PATCH(req: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return proxy(req, params.proxy)
+export async function PATCH(req: NextRequest, ctx: Context) {
+  return proxy(req, (await ctx.params).proxy)
 }
 
 async function proxy(req: NextRequest, segments: string[]) {
