@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+// Proxy via Next.js API routes → élimine CORS définitivement
+const API_URL = typeof window !== 'undefined' ? '/api' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000')
 
 export const api = axios.create({
   baseURL: API_URL,
