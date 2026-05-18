@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'https://difficult-marley-carrachedevpro-a2bb029d.koyeb.app'
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'https://tontinepro-api-production.up.railway.app'
 
 type Context = { params: Promise<{ proxy: string[] }> }
 
