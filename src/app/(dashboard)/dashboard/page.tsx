@@ -265,7 +265,7 @@ export default function DashboardPage() {
 
       {/* ── KPIs primaires ─────────────────────────────────────────────────── */}
       <div>
-        <SectionTitle>Vue d'ensemble</SectionTitle>
+        <SectionTitle>Vue d&apos;ensemble</SectionTitle>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {loadingKpis
             ? Array.from({ length: 4 }).map((_, i) => (
