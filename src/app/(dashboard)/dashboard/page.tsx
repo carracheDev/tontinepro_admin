@@ -12,6 +12,7 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid,
+  PieChart, Pie, Cell, Legend,
 } from 'recharts'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -121,6 +122,8 @@ function FeedRow({ tx }: { tx: Tx }) {
 export default function DashboardPage() {
   const { data: kpis, isLoading: loadingKpis, mutate: refreshKpis } =
     useSWR('/analytics/kpis', fetcher, { refreshInterval: 60_000 })
+
+  const { data: dash } = useSWR('/analytics/dashboard', fetcher, { refreshInterval: 120_000 })
 
   const { data: revenus } = useSWR('/analytics/evolution-revenus', fetcher)
 
@@ -350,30 +353,163 @@ export default function DashboardPage() {
         <div>
           <SectionTitle>Indicateurs qualité</SectionTitle>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatRate
-              label="Taux remboursement crédit"
-              value={`${kpis.tauxRemboursement ?? 0}%`}
-              color="var(--primary)"
-            />
-            <StatRate
-              label="Taux commission moyen"
-              value={kpis.tauxCommission ?? '—'}
-              color="var(--foreground)"
-            />
-            <StatRate
-              label="Éligibles micro-crédit"
-              value={kpis.clientsEligiblesMicroCredit ?? '—'}
-              color="var(--info)"
-            />
-            <StatRate
-              label="Litiges ouverts"
-              value={nbLitiges}
-              color={nbLitiges > 0 ? 'var(--danger)' : 'var(--primary)'}
-            />
+            <StatRate label="Taux remboursement crédit" value={`${kpis.tauxRemboursement ?? 0}%`} color="var(--primary)" />
+            <StatRate label="Taux commission moyen" value={kpis.tauxCommission ?? '—'} color="var(--foreground)" />
+            <StatRate label="Éligibles micro-crédit" value={kpis.clientsEligiblesMicroCredit ?? '—'} color="var(--info)" />
+            <StatRate label="Litiges ouverts" value={nbLitiges} color={nbLitiges > 0 ? 'var(--danger)' : 'var(--primary)'} />
           </div>
         </div>
       )}
 
+      {/* ── Graphiques en camembert ────────────────────────────────────────── */}
+      {dash?.graphiques && (
+        <div>
+          <SectionTitle>Répartitions — graphiques</SectionTitle>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+            {/* KYC */}
+            <DonutCard
+              titre="Statuts KYC"
+              data={(dash.graphiques.kycParStatut ?? []).map((s: {label: string; valeur: number}) => ({
+                name: { VALIDE: 'Validés', EN_ATTENTE: 'En attente', REJETE: 'Rejetés' }[s.label] ?? s.label,
+                value: s.valeur,
+              }))}
+              couleurs={['#16A34A', '#D97706', '#DC2626']}
+            />
+
+            {/* Tontines par type */}
+            <DonutCard
+              titre="Types de tontines"
+              data={(dash.graphiques.tontinesParType ?? []).map((s: {label: string; valeur: number}) => ({
+                name: { PERSONNEL: 'Personnel', GROUPE: 'Groupe', PROJET: 'Projet' }[s.label] ?? s.label,
+                value: s.valeur,
+              }))}
+              couleurs={['#16A34A', '#1A56DB', '#D97706']}
+            />
+
+            {/* Crédits par statut */}
+            <DonutCard
+              titre="Statuts micro-crédits"
+              data={(dash.graphiques.creditsParStatut ?? []).map((s: {label: string; valeur: number}) => ({
+                name: { ACTIF: 'Actifs', EN_ATTENTE: 'En attente', EN_DEFAUT: 'En défaut', TERMINE: 'Terminés', REFUSE: 'Refusés' }[s.label] ?? s.label,
+                value: s.valeur,
+              }))}
+              couleurs={['#16A34A', '#D97706', '#DC2626', '#7C3AED', '#9CA3AF']}
+            />
+
+            {/* Distribution scores */}
+            {dash.graphiques.distributionScores && (() => {
+              const d = dash.graphiques.distributionScores
+              return (
+                <DonutCard
+                  titre="Distribution scores"
+                  data={[
+                    { name: 'Faible (<40)', value: d.faible },
+                    { name: 'Moyen (40-60)', value: d.moyen },
+                    { name: 'Bon (60-75)', value: d.bon },
+                    { name: 'Excellent (75-90)', value: d.excellent },
+                    { name: 'Élite (90+)', value: d.elite },
+                  ]}
+                  couleurs={['#DC2626', '#D97706', '#1A56DB', '#16A34A', '#059669']}
+                />
+              )
+            })()}
+
+          </div>
+        </div>
+      )}
+
+      {/* ── Évolution cotisations 12 mois (dashboard endpoint) ─────────────── */}
+      {dash?.graphiques?.evolutionMensuelle && (
+        <div>
+          <SectionTitle>Cotisations — 12 derniers mois</SectionTitle>
+          <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={dash.graphiques.evolutionMensuelle} barSize={14}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+                <XAxis dataKey="mois" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={v => `${(v/1000).toFixed(0)}K`} axisLine={false} tickLine={false} width={32} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB', fontSize: 12 }}
+                  formatter={(v) => [fmtFcfa(Number(v)), 'Cotisations']}
+                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                />
+                <Bar dataKey="montant" name="Cotisations" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* ── Top collecteurs ────────────────────────────────────────────────── */}
+      {dash?.topCollecteurs?.length > 0 && (
+        <div>
+          <SectionTitle>Top collecteurs</SectionTitle>
+          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+            {dash.topCollecteurs.map((c: {id: string; nom: string; telephone: string; nbClients: number; totalCommissions: number}, i: number) => (
+              <div key={c.id} className="flex items-center gap-4 px-5 py-3.5 border-b last:border-0" style={{ borderColor: '#F3F4F6' }}>
+                <span className="text-lg shrink-0">{['🥇', '🥈', '🥉'][i] ?? `${i + 1}`}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm truncate" style={{ color: 'var(--foreground)' }}>{c.nom}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{c.nbClients} clients · {c.telephone}</p>
+                </div>
+                <span className="font-black text-sm shrink-0" style={{ color: 'var(--primary)', fontVariantNumeric: 'tabular-nums' }}>
+                  {fmtFcfa(c.totalCommissions)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
+// ─── Composant Donut réutilisable ──────────────────────────────────────────────
+
+function DonutCard({ titre, data, couleurs }: {
+  titre: string
+  data: { name: string; value: number }[]
+  couleurs: string[]
+}) {
+  const total = data.reduce((s, d) => s + d.value, 0)
+  if (total === 0) return (
+    <div className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2" style={{ background: '#fff', border: '1px solid var(--border)', minHeight: 220 }}>
+      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>{titre}</p>
+      <p className="text-xs" style={{ color: 'var(--muted)' }}>Aucune donnée</p>
+    </div>
+  )
+  return (
+    <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+      <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--muted)' }}>{titre}</p>
+      <ResponsiveContainer width="100%" height={180}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="45%"
+            innerRadius={42}
+            outerRadius={65}
+            paddingAngle={2}
+            dataKey="value"
+          >
+            {data.map((_, i) => (
+              <Cell key={i} fill={couleurs[i % couleurs.length]} />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{ borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 12 }}
+            formatter={(v, name) => [`${v} (${total > 0 ? Math.round(Number(v) / total * 100) : 0}%)`, name]}
+          />
+          <Legend
+            iconType="circle"
+            iconSize={7}
+            wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
+            formatter={(v) => <span style={{ color: 'var(--muted)' }}>{v}</span>}
+          />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   )
 }

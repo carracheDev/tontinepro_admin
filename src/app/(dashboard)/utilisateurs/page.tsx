@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import useSWR from 'swr'
 import { api, extraireErreur } from '@/lib/api'
-import { Search, UserX, UserCheck, Users } from 'lucide-react'
+import { Search, UserX, UserCheck, Users, Eye } from 'lucide-react'
 
 const fetcher = (url: string) => api.get(url).then(r => r.data?.donnees ?? r.data)
 
@@ -137,13 +138,21 @@ export default function UtilisateursPage() {
                       {new Date(u.creeLe).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="px-6 py-4">
-                      <button onClick={() => toggleStatut(u)}
-                        disabled={loadingId === u.id || u.role === 'ADMIN'}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 disabled:opacity-40"
-                        style={{ background: u.statut === 'ACTIF' ? 'rgba(220,38,38,0.1)' : 'rgba(10,124,74,0.1)', color: u.statut === 'ACTIF' ? 'var(--danger)' : 'var(--primary)' }}>
-                        {u.statut === 'ACTIF' ? <UserX size={14} /> : <UserCheck size={14} />}
-                        {u.statut === 'ACTIF' ? 'Suspendre' : 'Réactiver'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/utilisateurs/${u.id}`}>
+                          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80"
+                            style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                            <Eye size={14} /> Fiche
+                          </button>
+                        </Link>
+                        <button onClick={() => toggleStatut(u)}
+                          disabled={loadingId === u.id || u.role === 'ADMIN'}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 disabled:opacity-40"
+                          style={{ background: u.statut === 'ACTIF' ? 'rgba(220,38,38,0.1)' : 'rgba(10,124,74,0.1)', color: u.statut === 'ACTIF' ? 'var(--danger)' : 'var(--primary)' }}>
+                          {u.statut === 'ACTIF' ? <UserX size={14} /> : <UserCheck size={14} />}
+                          {u.statut === 'ACTIF' ? 'Suspendre' : 'Réactiver'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
