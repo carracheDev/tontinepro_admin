@@ -12,7 +12,8 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Legend,
+  PieChart, Pie,
+  AreaChart, Area,
 } from 'recharts'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -350,24 +351,46 @@ export default function DashboardPage() {
               </h3>
               <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Commissions · Micro-crédits · Abonnements</p>
             </div>
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full"
-              style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
-              FCFA
-            </span>
+            <div className="flex items-center gap-3">
+              {[
+                { color: '#16A34A', label: 'Commissions' },
+                { color: '#8B5CF6', label: 'Crédits' },
+                { color: '#F59E0B', label: 'Abo.' },
+              ].map(({ color, label }) => (
+                <div key={label} className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={revenus ?? []} barSize={16}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F8FAFC" vertical={false} />
-              <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} axisLine={false} tickLine={false} width={36} />
+          <ResponsiveContainer width="100%" height={210}>
+            <BarChart data={revenus ?? []} barSize={14} barGap={2}>
+              <defs>
+                <linearGradient id="gComm" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#16A34A" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#22C55E" stopOpacity={0.8} />
+                </linearGradient>
+                <linearGradient id="gCredit" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#A78BFA" stopOpacity={0.8} />
+                </linearGradient>
+                <linearGradient id="gAbo" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#F59E0B" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#FCD34D" stopOpacity={0.8} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="0" stroke="#F1F5F9" vertical={false} />
+              <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#CBD5E1' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#CBD5E1' }} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} axisLine={false} tickLine={false} width={32} />
               <Tooltip
-                contentStyle={{ borderRadius: 14, border: 'none', fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
-                formatter={(v) => [fmtFcfa(Number(v))]}
-                cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                contentStyle={{ borderRadius: 14, border: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.14)', padding: '10px 14px' }}
+                formatter={(v, n) => [fmtFcfa(Number(v)), n]}
+                cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
               />
-              <Bar dataKey="commissions"         name="Commissions"   fill="#16A34A" radius={[4, 4, 0, 0]} stackId="a" />
-              <Bar dataKey="revenusMicroCredits" name="Micro-crédits" fill="#8B5CF6" radius={[4, 4, 0, 0]} stackId="a" />
-              <Bar dataKey="abonnements"         name="Abonnements"   fill="#F59E0B" radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="commissions"         name="Commissions"   fill="url(#gComm)"   radius={[6, 6, 0, 0]} stackId="a" />
+              <Bar dataKey="revenusMicroCredits" name="Micro-crédits" fill="url(#gCredit)" radius={[6, 6, 0, 0]} stackId="a" />
+              <Bar dataKey="abonnements"         name="Abonnements"   fill="url(#gAbo)"    radius={[6, 6, 0, 0]} stackId="a" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -427,99 +450,108 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── Graphiques en camembert ────────────────────────────────────────── */}
+      {/* ── Camemberts ────────────────────────────────────────────────────────── */}
       {dash?.graphiques && (
         <div>
-          <SectionTitle>Répartitions — graphiques</SectionTitle>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-
-            {/* KYC */}
+          <SectionTitle couleur="#06B6D4">Répartitions</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <DonutCard
-              titre="Statuts KYC"
+              titre="KYC"
+              icone="🛡️"
               data={(dash.graphiques.kycParStatut ?? []).map((s: {label: string; valeur: number}) => ({
                 name: { VALIDE: 'Validés', EN_ATTENTE: 'En attente', REJETE: 'Rejetés' }[s.label] ?? s.label,
                 value: s.valeur,
               }))}
-              couleurs={['#16A34A', '#D97706', '#DC2626']}
+              couleurs={['#16A34A', '#F59E0B', '#EF4444']}
             />
-
-            {/* Tontines par type */}
             <DonutCard
-              titre="Types de tontines"
+              titre="Tontines"
+              icone="🪣"
               data={(dash.graphiques.tontinesParType ?? []).map((s: {label: string; valeur: number}) => ({
                 name: { PERSONNEL: 'Personnel', GROUPE: 'Groupe', PROJET: 'Projet' }[s.label] ?? s.label,
                 value: s.valeur,
               }))}
-              couleurs={['#16A34A', '#1A56DB', '#D97706']}
+              couleurs={['#16A34A', '#3B82F6', '#F59E0B']}
             />
-
-            {/* Crédits par statut */}
             <DonutCard
-              titre="Statuts micro-crédits"
+              titre="Micro-crédits"
+              icone="💳"
               data={(dash.graphiques.creditsParStatut ?? []).map((s: {label: string; valeur: number}) => ({
-                name: { ACTIF: 'Actifs', EN_ATTENTE: 'En attente', EN_DEFAUT: 'En défaut', TERMINE: 'Terminés', REFUSE: 'Refusés' }[s.label] ?? s.label,
+                name: { ACTIF: 'Actifs', EN_ATTENTE: 'Attente', EN_DEFAUT: 'Défaut', TERMINE: 'Terminés', REFUSE: 'Refusés' }[s.label] ?? s.label,
                 value: s.valeur,
               }))}
-              couleurs={['#16A34A', '#D97706', '#DC2626', '#7C3AED', '#9CA3AF']}
+              couleurs={['#16A34A', '#F59E0B', '#EF4444', '#8B5CF6', '#9CA3AF']}
             />
-
-            {/* Distribution scores */}
-            {dash.graphiques.distributionScores && (() => {
-              const d = dash.graphiques.distributionScores
-              return (
-                <DonutCard
-                  titre="Distribution scores"
-                  data={[
-                    { name: 'Faible (<40)', value: d.faible },
-                    { name: 'Moyen (40-60)', value: d.moyen },
-                    { name: 'Bon (60-75)', value: d.bon },
-                    { name: 'Excellent (75-90)', value: d.excellent },
-                    { name: 'Élite (90+)', value: d.elite },
-                  ]}
-                  couleurs={['#DC2626', '#D97706', '#1A56DB', '#16A34A', '#059669']}
-                />
-              )
-            })()}
-
+            {dash.graphiques.distributionScores && (
+              <DonutCard
+                titre="Scores"
+                icone="⭐"
+                data={[
+                  { name: 'Faible', value: dash.graphiques.distributionScores.faible },
+                  { name: 'Moyen',  value: dash.graphiques.distributionScores.moyen  },
+                  { name: 'Bon',    value: dash.graphiques.distributionScores.bon    },
+                  { name: 'Excel.', value: dash.graphiques.distributionScores.excellent },
+                  { name: 'Élite',  value: dash.graphiques.distributionScores.elite  },
+                ]}
+                couleurs={['#EF4444', '#F59E0B', '#3B82F6', '#16A34A', '#059669']}
+              />
+            )}
           </div>
         </div>
       )}
 
-      {/* ── Évolution cotisations 12 mois (dashboard endpoint) ─────────────── */}
+      {/* ── Évolution cotisations 12 mois — AreaChart avec gradient ───────── */}
       {dash?.graphiques?.evolutionMensuelle && (
         <div>
-          <SectionTitle>Cotisations — 12 derniers mois</SectionTitle>
-          <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid var(--border)' }}>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={dash.graphiques.evolutionMensuelle} barSize={14}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
-                <XAxis dataKey="mois" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={v => `${(v/1000).toFixed(0)}K`} axisLine={false} tickLine={false} width={32} />
+          <SectionTitle couleur="#16A34A">Cotisations — 12 derniers mois</SectionTitle>
+          <div className="rounded-2xl p-6"
+            style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={dash.graphiques.evolutionMensuelle} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gCotis" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#16A34A" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#16A34A" stopOpacity={0}    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="0" stroke="#F1F5F9" vertical={false} />
+                <XAxis dataKey="mois" tick={{ fontSize: 10, fill: '#CBD5E1' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#CBD5E1' }} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} axisLine={false} tickLine={false} width={30} />
                 <Tooltip
-                  contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB', fontSize: 12 }}
+                  contentStyle={{ borderRadius: 14, border: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', padding: '10px 14px' }}
                   formatter={(v) => [fmtFcfa(Number(v)), 'Cotisations']}
-                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                  cursor={{ stroke: '#16A34A', strokeWidth: 1, strokeDasharray: '4 2' }}
                 />
-                <Bar dataKey="montant" name="Cotisations" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-              </BarChart>
+                <Area type="monotone" dataKey="montant" name="Cotisations"
+                  stroke="#16A34A" strokeWidth={2.5}
+                  fill="url(#gCotis)"
+                  dot={{ fill: '#16A34A', r: 3.5, strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#16A34A', strokeWidth: 3, stroke: '#fff' }}
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
       )}
 
-      {/* ── Top collecteurs ────────────────────────────────────────────────── */}
+      {/* ── Top collecteurs ───────────────────────────────────────────────────── */}
       {dash?.topCollecteurs?.length > 0 && (
         <div>
-          <SectionTitle>Top collecteurs</SectionTitle>
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+          <SectionTitle couleur="#F59E0B">Top collecteurs</SectionTitle>
+          <div className="rounded-2xl overflow-hidden"
+            style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
             {dash.topCollecteurs.map((c: {id: string; nom: string; telephone: string; nbClients: number; totalCommissions: number}, i: number) => (
-              <div key={c.id} className="flex items-center gap-4 px-5 py-3.5 border-b last:border-0" style={{ borderColor: '#F3F4F6' }}>
-                <span className="text-lg shrink-0">{['🥇', '🥈', '🥉'][i] ?? `${i + 1}`}</span>
+              <div key={c.id} className="flex items-center gap-4 px-5 py-4 border-b last:border-0 transition-colors hover:bg-gray-50"
+                style={{ borderColor: '#F8FAFC' }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base font-black shrink-0"
+                  style={{ background: i === 0 ? 'rgba(245,158,11,0.12)' : '#F8FAFC' }}>
+                  {['🥇', '🥈', '🥉'][i] ?? `${i + 1}`}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate" style={{ color: 'var(--foreground)' }}>{c.nom}</p>
-                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{c.nbClients} clients · {c.telephone}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{c.nbClients} clients</p>
                 </div>
-                <span className="font-black text-sm shrink-0" style={{ color: 'var(--primary)', fontVariantNumeric: 'tabular-nums' }}>
+                <span className="font-black text-sm shrink-0" style={{ color: '#16A34A', fontVariantNumeric: 'tabular-nums' }}>
                   {fmtFcfa(c.totalCommissions)}
                 </span>
               </div>
@@ -534,51 +566,73 @@ export default function DashboardPage() {
 
 // ─── Composant Donut réutilisable ──────────────────────────────────────────────
 
-function DonutCard({ titre, data, couleurs }: {
+function DonutCard({ titre, icone, data, couleurs }: {
   titre: string
+  icone?: string
   data: { name: string; value: number }[]
   couleurs: string[]
 }) {
   const total = data.reduce((s, d) => s + d.value, 0)
-
-  // Recharts v3 : injecter fill directement dans chaque entrée (remplace Cell)
   const dataWithColors = data.map((d, i) => ({ ...d, fill: couleurs[i % couleurs.length] }))
 
   if (total === 0) return (
     <div className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2"
-      style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', minHeight: 220 }}>
-      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>{titre}</p>
-      <p className="text-xs" style={{ color: 'var(--muted)' }}>Aucune donnée</p>
+      style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', minHeight: 230 }}>
+      <span className="text-2xl opacity-30">{icone ?? '📊'}</span>
+      <p className="text-xs font-bold" style={{ color: 'var(--muted)' }}>{titre}</p>
+      <p className="text-xs opacity-60" style={{ color: 'var(--muted)' }}>Aucune donnée</p>
     </div>
   )
 
   return (
-    <div className="rounded-2xl p-5 transition-shadow hover:shadow-md"
+    <div className="rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5"
       style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-      <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--muted)' }}>{titre}</p>
-      <ResponsiveContainer width="100%" height={180}>
+
+      {/* En-tête */}
+      <div className="flex items-center gap-2 mb-3">
+        {icone && <span className="text-base">{icone}</span>}
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted)' }}>{titre}</p>
+        <span className="ml-auto text-xs font-black" style={{ color: 'var(--foreground)' }}>{total}</span>
+      </div>
+
+      <ResponsiveContainer width="100%" height={160}>
         <PieChart>
           <Pie
             data={dataWithColors}
             cx="50%"
-            cy="45%"
-            innerRadius={42}
-            outerRadius={65}
-            paddingAngle={2}
+            cy="50%"
+            innerRadius={38}
+            outerRadius={58}
+            paddingAngle={3}
             dataKey="value"
+            strokeWidth={0}
           />
           <Tooltip
-            contentStyle={{ borderRadius: 12, border: 'none', fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
-            formatter={(v, name) => [`${v} (${total > 0 ? Math.round(Number(v) / total * 100) : 0}%)`, name]}
-          />
-          <Legend
-            iconType="circle"
-            iconSize={7}
-            wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
-            formatter={(v) => <span style={{ color: 'var(--muted)' }}>{v}</span>}
+            contentStyle={{
+              borderRadius: 12, border: 'none', fontSize: 11,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.14)', padding: '8px 12px',
+            }}
+            formatter={(v, name) => [
+              `${v}  (${total > 0 ? Math.round(Number(v) / total * 100) : 0}%)`,
+              name,
+            ]}
           />
         </PieChart>
       </ResponsiveContainer>
+
+      {/* Légende compacte */}
+      <div className="space-y-1.5 mt-1">
+        {dataWithColors.map((d) => {
+          const pct = total > 0 ? Math.round(d.value / total * 100) : 0
+          return (
+            <div key={d.name} className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.fill }} />
+              <span className="text-xs flex-1 truncate" style={{ color: 'var(--muted)' }}>{d.name}</span>
+              <span className="text-xs font-bold tabular-nums" style={{ color: d.fill }}>{pct}%</span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
