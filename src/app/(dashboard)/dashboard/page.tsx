@@ -12,7 +12,7 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Legend,
 } from 'recharts'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -41,11 +41,14 @@ function dateLocale() {
 
 // ─── Composants utilitaires ────────────────────────────────────────────────────
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children, couleur = '#16A34A' }: { children: React.ReactNode; couleur?: string }) {
   return (
-    <h2 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--muted)' }}>
-      {children}
-    </h2>
+    <div className="flex items-center gap-2.5 mb-4">
+      <span className="w-1 h-4 rounded-full" style={{ background: couleur }} />
+      <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted)' }}>
+        {children}
+      </h2>
+    </div>
   )
 }
 
@@ -55,16 +58,17 @@ function AlertStrip({
   return (
     <Link href={href}>
       <div
-        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-opacity hover:opacity-90"
+        className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
         style={{
-          background: `${couleur}12`,
-          border: `1px solid ${couleur}35`,
+          background: `${couleur}10`,
+          border: `1px solid ${couleur}30`,
           color: couleur,
+          boxShadow: `0 1px 4px ${couleur}12`,
         }}
       >
-        <Icon size={15} className="shrink-0" />
+        <Icon size={16} className="shrink-0" />
         <span className="flex-1">{message}</span>
-        <span className="font-bold text-xs opacity-75">Voir →</span>
+        <span className="font-bold text-xs opacity-60 bg-white/40 px-2 py-0.5 rounded-full">Voir →</span>
       </div>
     </Link>
   )
@@ -73,11 +77,16 @@ function AlertStrip({
 function StatRate({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
     <div
-      className="rounded-2xl p-4 flex flex-col gap-1"
-      style={{ background: '#fff', border: '1px solid var(--border)' }}
+      className="rounded-2xl p-5 flex flex-col gap-2 transition-all hover:-translate-y-0.5"
+      style={{
+        background: '#fff',
+        border: '1px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+        borderBottom: `3px solid ${color}`,
+      }}
     >
-      <p className="text-xs font-medium" style={{ color: 'var(--muted)' }}>{label}</p>
-      <p className="text-xl font-black" style={{ color, fontVariantNumeric: 'tabular-nums' }}>{value}</p>
+      <p className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>{label}</p>
+      <p className="text-2xl font-black leading-none" style={{ color, fontVariantNumeric: 'tabular-nums' }}>{value}</p>
     </div>
   )
 }
@@ -154,97 +163,140 @@ export default function DashboardPage() {
       ? txData.transactions
       : []
 
-  // ── Cartes KPI primaires ────────────────────────────────────────────────────
+  // ── Cartes KPI primaires — chaque carte a sa couleur unique ───────────────
   const kpisPrimaires = [
     {
       titre: 'Clients actifs',
       valeur: kpis?.totalClients ?? '—',
       icone: Users,
-      couleur: 'var(--primary)',
-      sousTitre: 'Comptes vérifiés',
+      couleur: '#16A34A',    // vert
+      sousTitre: 'Comptes enregistrés',
       href: '/utilisateurs',
     },
     {
       titre: 'Collecteurs actifs',
       valeur: kpis?.totalCollecteurs ?? '—',
       icone: Users,
-      couleur: 'var(--info)',
+      couleur: '#3B82F6',    // bleu
       sousTitre: 'Agents de terrain',
-      href: '/utilisateurs',
+      href: '/collecteurs',
     },
     {
       titre: 'Volume cotisé',
       valeur: kpis?.volumeTotal != null ? fmtFcfa(kpis.volumeTotal) : '—',
       icone: TrendingUp,
-      couleur: 'var(--primary)',
-      sousTitre: 'Toutes tontines',
+      couleur: '#8B5CF6',    // violet
+      sousTitre: 'Toutes tontines confondues',
     },
     {
       titre: 'Revenus total',
       valeur: kpis?.revenusTotal != null ? fmtFcfa(kpis.revenusTotal) : '—',
       icone: Banknote,
-      couleur: 'var(--primary-vif)',
+      couleur: '#F59E0B',    // or/amber
       sousTitre: 'Commissions + crédits + abo.',
     },
   ]
 
-  // ── Cartes KPI secondaires ──────────────────────────────────────────────────
+  // ── Cartes KPI secondaires ─────────────────────────────────────────────────
   const kpisSecondaires = [
     {
-      titre: 'Commissions',
+      titre: 'Commissions agents',
       valeur: kpis?.revenusCommissions != null ? fmtFcfa(kpis.revenusCommissions) : '—',
       icone: Coins,
-      couleur: 'var(--primary)',
+      couleur: '#16A34A',
     },
     {
       titre: 'Revenus micro-crédits',
       valeur: kpis?.revenusMicroCredits != null ? fmtFcfa(kpis.revenusMicroCredits) : '—',
       icone: CreditCard,
-      couleur: 'var(--info)',
+      couleur: '#8B5CF6',
       href: '/micro-credits',
     },
     {
       titre: 'Éligibles PADME',
       valeur: kpis?.clientsEligiblesPADME ?? '—',
       icone: Activity,
-      couleur: '#7C3AED',
+      couleur: '#06B6D4',    // cyan
       sousTitre: 'Score ≥ 70',
+      href: '/padme',
     },
     {
       titre: 'Retraits en attente',
       valeur: nbRetraits,
       icone: ArrowDownToLine,
-      couleur: nbRetraits > 0 ? 'var(--warning)' : 'var(--muted)',
+      couleur: nbRetraits > 0 ? '#F59E0B' : '#9CA3AF',
       badge: nbRetraits > 0 ? `${nbRetraits} urgent${nbRetraits > 1 ? 's' : ''}` : undefined,
-      badgeCouleur: 'var(--warning)',
+      badgeCouleur: '#F59E0B',
       href: '/retraits',
     },
   ]
 
   return (
-    <div className="space-y-6 max-w-350">
+    <div className="space-y-7 max-w-350">
 
-      {/* ── En-tête contextuel ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-black" style={{ color: 'var(--foreground)' }}>
-            {heure()}, Admin 👋
-          </h1>
-          <p className="text-sm mt-0.5 capitalize" style={{ color: 'var(--muted)' }}>
-            {dateLocale()}
-          </p>
+      {/* ── Hero header ───────────────────────────────────────────────────────── */}
+      <div
+        className="rounded-3xl p-6 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E3A5F 60%, #16A34A22 100%)',
+          boxShadow: '0 8px 32px rgba(15,23,42,0.25)',
+        }}
+      >
+        {/* Cercles décoratifs */}
+        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-10"
+          style={{ background: '#16A34A' }} />
+        <div className="absolute bottom-0 left-1/3 w-24 h-24 rounded-full opacity-5"
+          style={{ background: '#3B82F6' }} />
+
+        <div className="relative flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1"
+              style={{ color: 'rgba(255,255,255,0.5)' }}>
+              TontineBénin Administration
+            </p>
+            <h1 className="text-2xl font-black text-white">
+              {heure()}, Admin 👋
+            </h1>
+            <p className="text-sm mt-1 capitalize" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              {dateLocale()}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-xs font-semibold text-white">Live — refresh auto</span>
+            </div>
+            <button onClick={() => refreshKpis()}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/20"
+              style={{ color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)' }}>
+              <RefreshCw size={13} />
+              Actualiser
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => refreshKpis()}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors hover:bg-white"
-          style={{ color: 'var(--muted)', border: '1px solid var(--border)' }}
-        >
-          <RefreshCw size={13} />
-          Actualiser
-        </button>
+
+        {/* Mini stats inline */}
+        {kpis && (
+          <div className="relative flex gap-6 mt-5 pt-4"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            {[
+              { label: 'Clients', val: kpis.totalClients },
+              { label: 'Collecteurs', val: kpis.totalCollecteurs },
+              { label: 'Taux remb.', val: `${kpis.tauxRemboursement ?? 0}%` },
+              { label: 'PADME éligibles', val: kpis.clientsEligiblesPADME ?? 0 },
+            ].map(({ label, val }) => (
+              <div key={label}>
+                <p className="text-lg font-black text-white"
+                  style={{ fontVariantNumeric: 'tabular-nums' }}>{val}</p>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ── Alertes urgentes ───────────────────────────────────────────────── */}
+      {/* ── Alertes urgentes ──────────────────────────────────────────────────── */}
       {(nbRetraits > 0 || nbLitiges > 0) && (
         <div className="flex flex-col gap-2">
           {nbRetraits > 0 && (
@@ -252,7 +304,7 @@ export default function DashboardPage() {
               icon={ArrowDownToLine}
               message={`${nbRetraits} retrait${nbRetraits > 1 ? 's' : ''} ≥ 50 000 FCFA en attente de validation`}
               href="/retraits"
-              couleur="var(--warning)"
+              couleur="#F59E0B"
             />
           )}
           {nbLitiges > 0 && (
@@ -260,19 +312,19 @@ export default function DashboardPage() {
               icon={Scale}
               message={`${nbLitiges} litige${nbLitiges > 1 ? 's' : ''} ouvert${nbLitiges > 1 ? 's' : ''} nécessitant une action`}
               href="/litiges"
-              couleur="var(--danger)"
+              couleur="#EF4444"
             />
           )}
         </div>
       )}
 
-      {/* ── KPIs primaires ─────────────────────────────────────────────────── */}
+      {/* ── KPIs primaires ────────────────────────────────────────────────────── */}
       <div>
-        <SectionTitle>Vue d&apos;ensemble</SectionTitle>
+        <SectionTitle couleur="#16A34A">Vue d&apos;ensemble</SectionTitle>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {loadingKpis
             ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-2xl h-28 animate-pulse" style={{ background: '#E5E7EB' }} />
+                <div key={i} className="rounded-2xl h-32 animate-pulse" style={{ background: '#F1F5F9' }} />
               ))
             : kpisPrimaires.map((c) => <KpiCard key={c.titre} {...c} />)
           }
@@ -284,79 +336,93 @@ export default function DashboardPage() {
 
         {/* Graphique revenus 6 mois */}
         <div
-          className="lg:col-span-3 rounded-2xl p-5"
-          style={{ background: '#fff', border: '1px solid var(--border)' }}
+          className="lg:col-span-3 rounded-2xl p-6 transition-shadow hover:shadow-lg"
+          style={{
+            background: '#fff',
+            border: '1px solid rgba(0,0,0,0.06)',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+          }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
-              Revenus — 6 derniers mois
-            </h3>
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-              style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>
+                Revenus — 6 derniers mois
+              </h3>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Commissions · Micro-crédits · Abonnements</p>
+            </div>
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full"
+              style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
               FCFA
             </span>
           </div>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={revenus ?? []} barSize={18}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+            <BarChart data={revenus ?? []} barSize={16}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F8FAFC" vertical={false} />
               <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} axisLine={false} tickLine={false} width={36} />
               <Tooltip
-                contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                contentStyle={{ borderRadius: 14, border: 'none', fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
                 formatter={(v) => [fmtFcfa(Number(v))]}
-                cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                cursor={{ fill: 'rgba(0,0,0,0.02)' }}
               />
-              <Bar dataKey="commissions"        name="Commissions"   fill="var(--primary)"    radius={[4, 4, 0, 0]} stackId="a" />
-              <Bar dataKey="revenusMicroCredits" name="Micro-crédits" fill="var(--info)"       radius={[4, 4, 0, 0]} stackId="a" />
-              <Bar dataKey="abonnements"         name="Abonnements"   fill="var(--primary-vif)" radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="commissions"         name="Commissions"   fill="#16A34A" radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="revenusMicroCredits" name="Micro-crédits" fill="#8B5CF6" radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="abonnements"         name="Abonnements"   fill="#F59E0B" radius={[4, 4, 0, 0]} stackId="a" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Fil d'activité récente */}
         <div
-          className="lg:col-span-2 rounded-2xl p-5 flex flex-col"
-          style={{ background: '#fff', border: '1px solid var(--border)' }}
+          className="lg:col-span-2 rounded-2xl p-6 flex flex-col"
+          style={{
+            background: '#fff',
+            border: '1px solid rgba(0,0,0,0.06)',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+          }}
         >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
-              Activité récente
-            </h3>
-            <Link href="/utilisateurs" className="text-xs font-semibold hover:underline" style={{ color: 'var(--primary)' }}>
-              Tout voir
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>Activité récente</h3>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Dernières transactions</p>
+            </div>
+            <Link href="/utilisateurs"
+              className="text-xs font-bold px-2.5 py-1 rounded-full transition-colors hover:bg-green-50"
+              style={{ color: '#16A34A', border: '1px solid #BBF7D0' }}>
+              Tout voir →
             </Link>
           </div>
 
           {txListe.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center py-6">
-              <Activity size={28} style={{ color: 'var(--border)' }} />
+              <Activity size={28} style={{ color: '#E5E7EB' }} />
               <p className="text-xs" style={{ color: 'var(--muted)' }}>Aucune transaction récente</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto space-y-0">
               {txListe.slice(0, 8).map((tx) => <FeedRow key={tx.id} tx={tx} />)}
             </div>
           )}
         </div>
       </div>
 
-      {/* ── KPIs secondaires ───────────────────────────────────────────────── */}
+      {/* ── KPIs secondaires ──────────────────────────────────────────────────── */}
       <div>
-        <SectionTitle>Détail financier</SectionTitle>
+        <SectionTitle couleur="#8B5CF6">Détail financier</SectionTitle>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {kpisSecondaires.map((c) => <KpiCard key={c.titre} {...c} />)}
         </div>
       </div>
 
-      {/* ── Taux clés ──────────────────────────────────────────────────────── */}
+      {/* ── Taux clés ────────────────────────────────────────────────────────── */}
       {kpis && (
         <div>
-          <SectionTitle>Indicateurs qualité</SectionTitle>
+          <SectionTitle couleur="#3B82F6">Indicateurs qualité</SectionTitle>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatRate label="Taux remboursement crédit" value={`${kpis.tauxRemboursement ?? 0}%`} color="var(--primary)" />
-            <StatRate label="Taux commission moyen" value={kpis.tauxCommission ?? '—'} color="var(--foreground)" />
-            <StatRate label="Éligibles micro-crédit" value={kpis.clientsEligiblesMicroCredit ?? '—'} color="var(--info)" />
-            <StatRate label="Litiges ouverts" value={nbLitiges} color={nbLitiges > 0 ? 'var(--danger)' : 'var(--primary)'} />
+            <StatRate label="Taux remboursement crédit" value={`${kpis.tauxRemboursement ?? 0}%`} color="#16A34A" />
+            <StatRate label="Commission moyenne" value={kpis.tauxCommission ?? '—'} color="var(--foreground)" />
+            <StatRate label="Éligibles micro-crédit" value={kpis.clientsEligiblesMicroCredit ?? '—'} color="#8B5CF6" />
+            <StatRate label="Litiges ouverts" value={nbLitiges} color={nbLitiges > 0 ? '#EF4444' : '#16A34A'} />
           </div>
         </div>
       )}
@@ -474,32 +540,35 @@ function DonutCard({ titre, data, couleurs }: {
   couleurs: string[]
 }) {
   const total = data.reduce((s, d) => s + d.value, 0)
+
+  // Recharts v3 : injecter fill directement dans chaque entrée (remplace Cell)
+  const dataWithColors = data.map((d, i) => ({ ...d, fill: couleurs[i % couleurs.length] }))
+
   if (total === 0) return (
-    <div className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2" style={{ background: '#fff', border: '1px solid var(--border)', minHeight: 220 }}>
+    <div className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2"
+      style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', minHeight: 220 }}>
       <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>{titre}</p>
       <p className="text-xs" style={{ color: 'var(--muted)' }}>Aucune donnée</p>
     </div>
   )
+
   return (
-    <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid var(--border)' }}>
-      <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--muted)' }}>{titre}</p>
+    <div className="rounded-2xl p-5 transition-shadow hover:shadow-md"
+      style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+      <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--muted)' }}>{titre}</p>
       <ResponsiveContainer width="100%" height={180}>
         <PieChart>
           <Pie
-            data={data}
+            data={dataWithColors}
             cx="50%"
             cy="45%"
             innerRadius={42}
             outerRadius={65}
             paddingAngle={2}
             dataKey="value"
-          >
-            {data.map((_, i) => (
-              <Cell key={i} fill={couleurs[i % couleurs.length]} />
-            ))}
-          </Pie>
+          />
           <Tooltip
-            contentStyle={{ borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 12 }}
+            contentStyle={{ borderRadius: 12, border: 'none', fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
             formatter={(v, name) => [`${v} (${total > 0 ? Math.round(Number(v) / total * 100) : 0}%)`, name]}
           />
           <Legend
