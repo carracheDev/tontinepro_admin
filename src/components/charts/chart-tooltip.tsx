@@ -71,8 +71,8 @@ export function ChartCard({
       className={`rounded-2xl p-6 transition-shadow hover:shadow-lg ${className}`}
       style={{
         background: '#fff',
-        border: '1px solid rgba(0,0,0,0.06)',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+        border: '1px solid #E2E8F0',
+        boxShadow: '0 2px 8px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)',
       }}
     >
       <div className="flex items-start justify-between mb-5">

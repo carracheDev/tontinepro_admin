@@ -116,7 +116,7 @@ export default function UtilisateursPage() {
 
       {/* ── Table ────────────────────────────────────────────────────────────── */}
       <div className="rounded-2xl overflow-hidden"
-        style={{ border: '1px solid rgba(0,0,0,0.06)', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+        style={{ border: '1px solid #E2E8F0', background: '#fff', boxShadow: '0 2px 8px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)' }}>
 
         {/* Compteur */}
         <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: 'var(--border)' }}>
@@ -137,7 +137,7 @@ export default function UtilisateursPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr style={{ background: '#F9FAFB', borderBottom: '1px solid var(--border)' }}>
+              <tr style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
                 {['Client', 'Téléphone', 'Rôle', 'Statut', 'Score', 'KYC', 'Inscrit le', 'Actions'].map(h => (
                   <th key={h} className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide"
                     style={{ color: 'var(--muted)' }}>{h}</th>
@@ -154,7 +154,7 @@ export default function UtilisateursPage() {
                     key={u.id}
                     onClick={() => router.push(`/utilisateurs/${u.id}`)}
                     className="transition-colors cursor-pointer group"
-                    style={{ borderBottom: '1px solid #F3F4F6' }}
+                    style={{ borderBottom: '1px solid #E2E8F0' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >

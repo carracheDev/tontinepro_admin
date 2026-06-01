@@ -18,7 +18,14 @@ import {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const fetcher = (url: string) => api.get(url).then(r => r.data?.donnees ?? r.data)
+const fetcher = (url: string) => api.get(url).then(r => r.data?.donnees ?? r.data).catch(e => {
+  if (e?.response?.status === 401) {
+    localStorage.removeItem('admin_token')
+    document.cookie = 'admin_token=; path=/; max-age=0'
+    window.location.href = '/login'
+  }
+  return null
+})
 
 function fmt(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
@@ -81,8 +88,8 @@ function StatRate({ label, value, color }: { label: string; value: string | numb
       className="rounded-2xl p-5 flex flex-col gap-2 transition-all hover:-translate-y-0.5"
       style={{
         background: '#fff',
-        border: '1px solid rgba(0,0,0,0.06)',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+        border: '1px solid #E2E8F0',
+        boxShadow: '0 2px 8px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)',
         borderBottom: `3px solid ${color}`,
       }}
     >
@@ -141,10 +148,10 @@ export default function DashboardPage() {
     useSWR('/retraits/en-attente', fetcher, { refreshInterval: 30_000 })
 
   const { data: litigesData } =
-    useSWR('/litiges', fetcher, { refreshInterval: 60_000 })
+    useSWR('/litiges/en-cours/liste', fetcher, { refreshInterval: 60_000 })
 
   const { data: txData } =
-    useSWR('/transactions?limit=8&page=1', fetcher, { refreshInterval: 30_000 })
+    useSWR('/transactions/historique?limit=8&page=1', fetcher, { refreshInterval: 30_000 })
 
   // ── Comptages ───────────────────────────────────────────────────────────────
   const nbRetraits = Array.isArray(retraitsData) ? retraitsData.length : 0
@@ -237,40 +244,51 @@ export default function DashboardPage() {
 
       {/* ── Hero header ───────────────────────────────────────────────────────── */}
       <div
-        className="rounded-3xl p-6 relative overflow-hidden"
+        className="rounded-3xl p-7 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E3A5F 60%, #16A34A22 100%)',
-          boxShadow: '0 8px 32px rgba(15,23,42,0.25)',
+          background: 'linear-gradient(135deg, #0A0F1E 0%, #0F2D1A 40%, #14532D 75%, #16A34A 100%)',
+          boxShadow: '0 12px 40px rgba(15,23,42,0.40), 0 4px 12px rgba(22,163,74,0.15)',
         }}
       >
-        {/* Cercles décoratifs */}
-        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-10"
-          style={{ background: '#16A34A' }} />
-        <div className="absolute bottom-0 left-1/3 w-24 h-24 rounded-full opacity-5"
-          style={{ background: '#3B82F6' }} />
+        {/* Cercles décoratifs lumineux */}
+        <div className="absolute -top-10 -right-10 w-52 h-52 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.25) 0%, transparent 70%)' }} />
+        <div className="absolute top-4 right-1/3 w-32 h-32 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 70%)' }} />
+        <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)' }} />
+
+        {/* Ligne décorative verte en haut */}
+        <div className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(22,163,74,0.6), transparent)' }} />
 
         <div className="relative flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-1"
-              style={{ color: 'rgba(255,255,255,0.5)' }}>
-              TontineBénin Administration
-            </p>
-            <h1 className="text-2xl font-black text-white">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <p className="text-xs font-bold uppercase tracking-widest"
+                style={{ color: 'rgba(134,239,172,0.8)' }}>
+                TontineBénin Administration
+              </p>
+            </div>
+            <h1 className="text-3xl font-black text-white tracking-tight">
               {heure()}, Admin 👋
             </h1>
-            <p className="text-sm mt-1 capitalize" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <p className="text-sm mt-1.5 capitalize font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
               {dateLocale()}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+              style={{ background: 'rgba(22,163,74,0.18)', border: '1px solid rgba(22,163,74,0.35)' }}>
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-xs font-semibold text-white">Live — refresh auto</span>
+              <span className="text-xs font-semibold" style={{ color: 'rgba(134,239,172,0.9)' }}>Live — refresh auto</span>
             </div>
             <button onClick={() => refreshKpis()}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/20"
-              style={{ color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)' }}>
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all"
+              style={{ color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.07)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}>
               <RefreshCw size={13} />
               Actualiser
             </button>
@@ -279,18 +297,17 @@ export default function DashboardPage() {
 
         {/* Mini stats inline */}
         {kpis && (
-          <div className="relative flex gap-6 mt-5 pt-4"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="relative flex gap-8 mt-6 pt-5"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
             {[
-              { label: 'Clients', val: kpis.totalClients },
-              { label: 'Collecteurs', val: kpis.totalCollecteurs },
-              { label: 'Taux remb.', val: `${kpis.tauxRemboursement ?? 0}%` },
-              { label: 'PADME éligibles', val: kpis.clientsEligiblesPADME ?? 0 },
-            ].map(({ label, val }) => (
+              { label: 'Clients', val: kpis.totalClients, color: '#86EFAC' },
+              { label: 'Collecteurs', val: kpis.totalCollecteurs, color: '#93C5FD' },
+              { label: 'Taux remb.', val: `${kpis.tauxRemboursement ?? 0}%`, color: '#FCD34D' },
+              { label: 'PADME éligibles', val: kpis.clientsEligiblesPADME ?? 0, color: '#C4B5FD' },
+            ].map(({ label, val, color }) => (
               <div key={label}>
-                <p className="text-lg font-black text-white"
-                  style={{ fontVariantNumeric: 'tabular-nums' }}>{val}</p>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</p>
+                <p className="text-xl font-black leading-none" style={{ color, fontVariantNumeric: 'tabular-nums' }}>{val}</p>
+                <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</p>
               </div>
             ))}
           </div>
@@ -340,8 +357,8 @@ export default function DashboardPage() {
           className="lg:col-span-3 rounded-2xl p-6 transition-shadow hover:shadow-lg"
           style={{
             background: '#fff',
-            border: '1px solid rgba(0,0,0,0.06)',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 2px 8px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)',
           }}
         >
           <div className="flex items-center justify-between mb-5">
@@ -349,7 +366,7 @@ export default function DashboardPage() {
               <h3 className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>
                 Revenus — 6 derniers mois
               </h3>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Commissions · Micro-crédits · Abonnements</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Commissions · PADME · Retraits</p>
             </div>
             <div className="flex items-center gap-3">
               {[
@@ -389,8 +406,7 @@ export default function DashboardPage() {
                 cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
               />
               <Bar dataKey="commissions"         name="Commissions"   fill="url(#gComm)"   radius={[6, 6, 0, 0]} stackId="a" />
-              <Bar dataKey="revenusMicroCredits" name="Micro-crédits" fill="url(#gCredit)" radius={[6, 6, 0, 0]} stackId="a" />
-              <Bar dataKey="abonnements"         name="Abonnements"   fill="url(#gAbo)"    radius={[6, 6, 0, 0]} stackId="a" />
+              <Bar dataKey="padme"               name="PADME"         fill="url(#gCredit)" radius={[6, 6, 0, 0]} stackId="a" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -400,8 +416,8 @@ export default function DashboardPage() {
           className="lg:col-span-2 rounded-2xl p-6 flex flex-col"
           style={{
             background: '#fff',
-            border: '1px solid rgba(0,0,0,0.06)',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 2px 8px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)',
           }}
         >
           <div className="flex items-center justify-between mb-4">
@@ -505,7 +521,7 @@ export default function DashboardPage() {
         <div>
           <SectionTitle couleur="#16A34A">Cotisations — 12 derniers mois</SectionTitle>
           <div className="rounded-2xl p-6"
-            style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            style={{ background: '#fff', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)' }}>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={dash.graphiques.evolutionMensuelle} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <defs>
@@ -539,7 +555,7 @@ export default function DashboardPage() {
         <div>
           <SectionTitle couleur="#F59E0B">Top collecteurs</SectionTitle>
           <div className="rounded-2xl overflow-hidden"
-            style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+            style={{ background: '#fff', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)' }}>
             {dash.topCollecteurs.map((c: {id: string; nom: string; telephone: string; nbClients: number; totalCommissions: number}, i: number) => (
               <div key={c.id} className="flex items-center gap-4 px-5 py-4 border-b last:border-0 transition-colors hover:bg-gray-50"
                 style={{ borderColor: '#F8FAFC' }}>
@@ -577,7 +593,7 @@ function DonutCard({ titre, icone, data, couleurs }: {
 
   if (total === 0) return (
     <div className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2"
-      style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', minHeight: 230 }}>
+      style={{ background: '#fff', border: '1px solid #E2E8F0', minHeight: 230 }}>
       <span className="text-2xl opacity-30">{icone ?? '📊'}</span>
       <p className="text-xs font-bold" style={{ color: 'var(--muted)' }}>{titre}</p>
       <p className="text-xs opacity-60" style={{ color: 'var(--muted)' }}>Aucune donnée</p>
@@ -586,7 +602,7 @@ function DonutCard({ titre, icone, data, couleurs }: {
 
   return (
     <div className="rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5"
-      style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+      style={{ background: '#fff', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)' }}>
 
       {/* En-tête */}
       <div className="flex items-center gap-2 mb-3">

@@ -17,12 +17,13 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Rediriger vers /login si 401
+// Rediriger vers /login si 401 — vider cookie ET localStorage
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('admin_token')
+      document.cookie = 'admin_token=; path=/; max-age=0'
       window.location.href = '/login'
     }
     return Promise.reject(err)

@@ -44,7 +44,7 @@ type FicheClient = {
     eligibleMicroCredit: boolean; eligiblePADME: boolean
     badges?: { niveau: string }[]
   }
-  documentsKyc: DocKyc[]
+  documentsKYC: DocKyc[]
   tontines: { id: string; nom: string; emoji: string; type: string; statut: string; soldeActuelFcfa: number }[]
   transactions: { id: string; type: string; montantFcfa: number; statut: string; operateur: string; creeLe: string }[]
   microCredits: { id: string; montantPrincipalFcfa: number; montantRestantFcfa: number; statut: string; dateEcheance?: string }[]
@@ -303,7 +303,7 @@ export default function FicheClientPage() {
   )
 
   const score = client.scoreCredit
-  const docEnAttente = client.documentsKyc.filter(d => d.statut === 'EN_ATTENTE').length
+  const docEnAttente = client.documentsKYC.filter(d => d.statut === 'EN_ATTENTE').length
 
   return (
     <div className="space-y-6 max-w-350">
@@ -345,11 +345,18 @@ export default function FicheClientPage() {
           </h1>
           <div className="flex items-center gap-2 flex-wrap mt-1">
             <span className="text-sm" style={{ color: 'var(--muted)' }}>{client.telephone}</span>
-            <Pill
-              label={client.statut}
-              color={client.statut === 'ACTIF' ? '#16A34A' : '#DC2626'}
-              bg={client.statut === 'ACTIF' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)'}
-            />
+            {(() => {
+              const s = client.statut
+              const cfg: Record<string, { label: string; color: string; bg: string }> = {
+                ACTIF:      { label: '✓ Actif',        color: '#16A34A', bg: 'rgba(22,163,74,0.1)'   },
+                SUSPENDU:   { label: '⛔ Suspendu',     color: '#F59E0B', bg: 'rgba(245,158,11,0.1)'  },
+                BLOQUE:     { label: '🔒 Bloqué',       color: '#DC2626', bg: 'rgba(220,38,38,0.1)'   },
+                EN_ATTENTE: { label: '⏳ En attente',   color: '#D97706', bg: 'rgba(217,119,6,0.1)'   },
+                INACTIF:    { label: 'Inactif',         color: '#6B7280', bg: 'rgba(107,114,128,0.1)' },
+              }
+              const c = cfg[s] ?? { label: s, color: '#6B7280', bg: 'rgba(107,114,128,0.1)' }
+              return <Pill label={c.label} color={c.color} bg={c.bg} />
+            })()}
             {client.kycVerifie && (
               <Pill label="KYC ✓" color="#16A34A" bg="rgba(22,163,74,0.1)" />
             )}
@@ -358,18 +365,20 @@ export default function FicheClientPage() {
             )}
           </div>
         </div>
-        <button
-          onClick={toggleStatut}
-          disabled={loading === 'statut'}
-          className="px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80 disabled:opacity-40 shrink-0"
-          style={{
-            background: client.statut === 'ACTIF' ? 'rgba(220,38,38,0.1)' : 'rgba(22,163,74,0.1)',
-            color: client.statut === 'ACTIF' ? '#DC2626' : '#16A34A',
-            border: `1px solid ${client.statut === 'ACTIF' ? 'rgba(220,38,38,0.3)' : 'rgba(22,163,74,0.3)'}`,
-          }}
-        >
-          {client.statut === 'ACTIF' ? '⛔ Suspendre' : '✅ Réactiver'}
-        </button>
+        {client.statut !== 'TERMINEE' && client.statut !== 'INACTIF' && (
+          <button
+            onClick={toggleStatut}
+            disabled={loading === 'statut'}
+            className="px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80 disabled:opacity-40 shrink-0"
+            style={{
+              background: client.statut === 'ACTIF' ? 'rgba(220,38,38,0.1)' : 'rgba(22,163,74,0.1)',
+              color: client.statut === 'ACTIF' ? '#DC2626' : '#16A34A',
+              border: `1px solid ${client.statut === 'ACTIF' ? 'rgba(220,38,38,0.3)' : 'rgba(22,163,74,0.3)'}`,
+            }}
+          >
+            {client.statut === 'ACTIF' ? '⛔ Suspendre' : '✅ Réactiver'}
+          </button>
+        )}
       </div>
 
       {/* ── Infos + Stats ─────────────────────────────────────────────────────── */}
@@ -459,7 +468,7 @@ export default function FicheClientPage() {
             )}
           </SectionTitle>
         </div>
-        {client.documentsKyc.length === 0 ? (
+        {client.documentsKYC.length === 0 ? (
           <Card>
             <div className="flex items-center gap-3">
               <Shield size={24} style={{ color: 'var(--muted)' }} />
@@ -468,7 +477,7 @@ export default function FicheClientPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {client.documentsKyc.map(doc => (
+            {client.documentsKYC.map(doc => (
               <DocKycCard
                 key={doc.id}
                 doc={doc}
@@ -491,7 +500,7 @@ export default function FicheClientPage() {
               const stColor = { ACTIVE: '#16A34A', SUSPENDUE: '#D97706', TERMINEE: '#9CA3AF', CREATION: '#1A56DB' }[t.statut] ?? '#9CA3AF'
               return (
                 <div key={t.id} className="flex items-center gap-3 px-5 py-3.5 border-b last:border-0"
-                  style={{ borderColor: '#F3F4F6' }}>
+                  style={{ borderColor: '#E2E8F0' }}>
                   <span className="text-xl shrink-0">{t.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate" style={{ color: 'var(--foreground)' }}>{t.nom}</p>
@@ -520,7 +529,7 @@ export default function FicheClientPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr style={{ background: '#F9FAFB', borderBottom: '1px solid var(--border)' }}>
+                  <tr style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
                     {['Type', 'Montant', 'Opérateur', 'Statut', 'Date'].map(h => (
                       <th key={h} className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide"
                         style={{ color: 'var(--muted)' }}>{h}</th>
@@ -529,7 +538,7 @@ export default function FicheClientPage() {
                 </thead>
                 <tbody>
                   {client.transactions.map(tx => (
-                    <tr key={tx.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                    <tr key={tx.id} style={{ borderBottom: '1px solid #E2E8F0' }}>
                       <td className="px-5 py-3 text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{tx.type}</td>
                       <td className="px-5 py-3 text-sm font-black" style={{ color: tx.type === 'RETRAIT' ? '#DC2626' : '#16A34A', fontVariantNumeric: 'tabular-nums' }}>
                         {fmtFcfa(tx.montantFcfa)}

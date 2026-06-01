@@ -95,7 +95,7 @@ export default function NotificationsPage() {
             placeholder="Ex: Maintenance prévue ce soir"
             maxLength={100}
             className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-            style={{ background: '#F9FAFB', border: '1px solid var(--border)' }}
+            style={{ background: '#fff', border: '1px solid var(--border)' }}
           />
         </div>
 
@@ -109,7 +109,7 @@ export default function NotificationsPage() {
             rows={4}
             maxLength={500}
             className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
-            style={{ background: '#F9FAFB', border: '1px solid var(--border)' }}
+            style={{ background: '#fff', border: '1px solid var(--border)' }}
           />
           <p className="text-xs mt-1 text-right" style={{ color: 'var(--muted)' }}>{message.length}/500</p>
         </div>

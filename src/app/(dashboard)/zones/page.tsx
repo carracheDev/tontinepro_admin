@@ -116,7 +116,7 @@ export default function ZonesPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr style={{ background: '#F9FAFB', borderBottom: '1px solid var(--border)' }}>
+              <tr style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
                 {['Zone', 'Ville', 'Clients', 'Score moyen', 'Éligibles PADME', 'Couverture PADME'].map(h => (
                   <th key={h} className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide"
                     style={{ color: 'var(--muted)' }}>{h}</th>
@@ -127,7 +127,7 @@ export default function ZonesPage() {
               {sortedByClients.map((z, i) => {
                 const couverture = z.nbClients > 0 ? Math.round(z.eligiblesPADME / z.nbClients * 100) : 0
                 return (
-                  <tr key={i} style={{ borderBottom: '1px solid #F3F4F6' }} className="hover:bg-gray-50">
+                  <tr key={i} style={{ borderBottom: '1px solid #E2E8F0' }} className="hover:bg-gray-50">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2">
                         <MapPin size={14} style={{ color: 'var(--primary)' }} />

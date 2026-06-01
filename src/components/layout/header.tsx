@@ -31,7 +31,10 @@ export default function Header() {
   const baseRoute = '/' + (pathname.split('/')[1] ?? '')
   const page = PAGES[baseRoute] ?? { titre: 'Administration', sous: 'TontineBénin' }
 
-  const { data: nonLues } = useSWR('/notifications/non-lues', fetcher, { refreshInterval: 30_000 })
+  const { data: nonLues } = useSWR('/notifications/non-lues', fetcher, {
+    refreshInterval: 60_000,
+    revalidateOnFocus: false,
+  })
   const nbNonLues: number = typeof nonLues === 'number' ? nonLues : nonLues?.count ?? 0
 
   return (

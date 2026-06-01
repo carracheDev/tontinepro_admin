@@ -21,6 +21,9 @@ type DossierPADME = {
   scoreAuMoment: number
   creeLe: string
   misAJourLe: string
+  descriptionActivite?: string
+  montantSouhaite?: number
+  objetCredit?: string
   client?: { nom: string; telephone: string }
 }
 
@@ -90,6 +93,16 @@ export default function PadmePage() {
     try {
       await api.put(`/padme/${id}/soumettre`)
       showToast('ok', '📤 Dossier soumis à PADME')
+      mutate()
+    } catch (err) { showToast('err', extraireErreur(err)) }
+    finally { setLoadingId(null) }
+  }
+
+  async function enregistrerResultat(id: string, statut: 'ACCEPTE' | 'REJETE', commentaire?: string) {
+    setLoadingId(id)
+    try {
+      await api.put(`/padme/${id}/resultat`, { statut, commentaire: commentaire ?? '' })
+      showToast('ok', statut === 'ACCEPTE' ? '✅ Dossier accepté par PADME' : '❌ Dossier rejeté')
       mutate()
     } catch (err) { showToast('err', extraireErreur(err)) }
     finally { setLoadingId(null) }
@@ -187,7 +200,7 @@ export default function PadmePage() {
         </div>
       </div>
 
-      {/* Table dossiers */}
+      {/* Dossiers */}
       <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
         <div className="px-5 py-4 border-b flex items-center gap-3 flex-wrap" style={{ borderColor: 'var(--border)' }}>
           <h2 className="font-bold text-sm flex-1" style={{ color: 'var(--foreground)' }}>
@@ -207,66 +220,119 @@ export default function PadmePage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr style={{ background: '#F9FAFB', borderBottom: '1px solid var(--border)' }}>
-                {['Client', 'Score', 'Statut', 'Date', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide"
-                    style={{ color: 'var(--muted)' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtres.map(d => {
-                const cfg = STATUT_CONFIG[d.statut] ?? STATUT_CONFIG.GENERE
-                return (
-                  <tr key={d.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                    <td className="px-5 py-3.5">
-                      <p className="font-semibold text-sm" style={{ color: 'var(--foreground)' }}>
+        <div className="divide-y" style={{ borderColor: '#E2E8F0' }}>
+          {filtres.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3" style={{ color: 'var(--muted)' }}>
+              <FileText size={40} className="opacity-20" />
+              <p className="text-sm">Aucun dossier dans cette catégorie</p>
+            </div>
+          )}
+          {filtres.map(d => {
+            const cfg = STATUT_CONFIG[d.statut] ?? STATUT_CONFIG.GENERE
+            return (
+              <div key={d.id} className="px-5 py-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start gap-4">
+
+                  {/* Avatar initiales */}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-sm text-white"
+                    style={{ background: 'var(--primary-dark)' }}>
+                    {(d.client?.nom ?? 'C').charAt(0).toUpperCase()}
+                  </div>
+
+                  {/* Contenu principal */}
+                  <div className="flex-1 min-w-0">
+
+                    {/* Ligne 1 : Identité + statut + date */}
+                    <div className="flex items-center gap-3 flex-wrap mb-2">
+                      <p className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>
                         {d.client?.nom ?? '—'}
                       </p>
                       <p className="text-xs" style={{ color: 'var(--muted)' }}>{d.client?.telephone}</p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className="font-black text-sm" style={{
-                        color: d.scoreAuMoment >= 80 ? '#16A34A' : d.scoreAuMoment >= 70 ? '#1A56DB' : '#D97706'
-                      }}>
-                        {d.scoreAuMoment}/100
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
                       <Pill label={cfg.label} color={cfg.color} bg={cfg.bg} />
-                    </td>
-                    <td className="px-5 py-3.5 text-sm" style={{ color: 'var(--muted)' }}>{fmtDate(d.creeLe)}</td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2">
-                        {d.statut === 'GENERE' && (
-                          <button onClick={() => validerAdmin(d.id)} disabled={loadingId === d.id}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40"
-                            style={{ background: '#1A56DB' }}>
-                            <CheckCircle2 size={13} /> Valider
-                          </button>
-                        )}
-                        {d.statut === 'VALIDE_ADMIN' && (
-                          <button onClick={() => soumettrePADME(d.id)} disabled={loadingId === d.id}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40"
-                            style={{ background: 'var(--warning)' }}>
-                            <Send size={13} /> Soumettre
-                          </button>
-                        )}
-                        <button onClick={() => exporterPdf(d.id)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold"
-                          style={{ background: '#F3F4F6', color: 'var(--muted)' }}>
-                          <Download size={13} /> PDF
-                        </button>
+                      <span className="text-xs ml-auto" style={{ color: 'var(--muted)' }}>{fmtDate(d.creeLe)}</span>
+                    </div>
+
+                    {/* Ligne 2 : Détails de la demande */}
+                    <div className="flex items-center gap-4 flex-wrap mb-3">
+                      {/* Score */}
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: '#F8FAFC' }}>
+                        <BarChart2 size={13} style={{ color: 'var(--muted)' }} />
+                        <span className="text-xs" style={{ color: 'var(--muted)' }}>Score</span>
+                        <span className="text-xs font-black" style={{
+                          color: d.scoreAuMoment >= 80 ? '#16A34A' : d.scoreAuMoment >= 70 ? '#1A56DB' : '#D97706'
+                        }}>
+                          {d.scoreAuMoment}/100
+                        </span>
                       </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+
+                      {/* Montant souhaité */}
+                      {d.montantSouhaite != null && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(22,163,74,0.07)' }}>
+                          <span className="text-xs font-bold" style={{ color: '#16A34A' }}>
+                            {d.montantSouhaite.toLocaleString('fr-FR')} FCFA demandés
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Objet du crédit */}
+                      {d.objetCredit && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(26,86,219,0.07)' }}>
+                          <span className="text-xs font-semibold" style={{ color: '#1A56DB' }}>{d.objetCredit}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Description activité */}
+                    {d.descriptionActivite && (
+                      <p className="text-xs leading-relaxed mb-3 p-3 rounded-xl"
+                        style={{ background: '#F8FAFC', color: 'var(--muted)', borderLeft: '3px solid #E5E7EB' }}>
+                        <span className="font-semibold" style={{ color: 'var(--foreground)' }}>Activité : </span>
+                        {d.descriptionActivite}
+                      </p>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      {d.statut === 'GENERE' && (
+                        <button onClick={() => validerAdmin(d.id)} disabled={loadingId === d.id}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40 transition-opacity"
+                          style={{ background: '#1A56DB' }}>
+                          <CheckCircle2 size={13} /> Valider le dossier
+                        </button>
+                      )}
+                      {d.statut === 'VALIDE_ADMIN' && (
+                        <button onClick={() => soumettrePADME(d.id)} disabled={loadingId === d.id}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40 transition-opacity"
+                          style={{ background: '#D97706' }}>
+                          <Send size={13} /> Marquer soumis à PADME
+                        </button>
+                      )}
+                      {d.statut === 'SOUMIS_PADME' && (<>
+                        <button onClick={() => enregistrerResultat(d.id, 'ACCEPTE')} disabled={loadingId === d.id}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40 transition-opacity"
+                          style={{ background: '#16A34A' }}>
+                          <CheckCircle2 size={13} /> Accepté par PADME
+                        </button>
+                        <button onClick={() => {
+                          const c = window.prompt('Motif du rejet (optionnel) :')
+                          if (c !== null) enregistrerResultat(d.id, 'REJETE', c)
+                        }} disabled={loadingId === d.id}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40 transition-opacity"
+                          style={{ background: '#DC2626' }}>
+                          <XCircle size={13} /> Rejeté
+                        </button>
+                      </>)}
+                      <button onClick={() => exporterPdf(d.id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                        style={{ background: '#F3F4F6', color: 'var(--muted)' }}>
+                        <Download size={13} /> Télécharger PDF
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

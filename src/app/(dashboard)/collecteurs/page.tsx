@@ -137,7 +137,7 @@ export default function CollecteursPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr style={{ background: '#F9FAFB', borderBottom: '1px solid var(--border)' }}>
+              <tr style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
                 {['Rang', 'Collecteur', 'Clients', 'Volume collecté', 'Commissions', 'Score moy. clients', 'Régularité'].map(h => (
                   <th key={h} className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide"
                     style={{ color: 'var(--muted)' }}>{h}</th>
@@ -148,7 +148,7 @@ export default function CollecteursPage() {
               {[...collecteurs]
                 .sort((a, b) => (b.volumeCollecte ?? 0) - (a.volumeCollecte ?? 0))
                 .map((c, i) => (
-                  <tr key={c.id ?? i} style={{ borderBottom: '1px solid #F3F4F6' }}
+                  <tr key={c.id ?? i} style={{ borderBottom: '1px solid #E2E8F0' }}
                     className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-3.5"><MedalBadge rang={i + 1} /></td>
                     <td className="px-5 py-3.5">

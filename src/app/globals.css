@@ -14,21 +14,24 @@
   --violet:  #8B5CF6;
 
   /* ── Surfaces ─────────────────────────────────────── */
-  --background: #F5F7FA;
-  --foreground: #111827;
-  --card-bg:    #FFFFFF;
-  --border:     #E5E7EB;
-  --muted:      #6B7280;
+  --background:   #F1F5F9;
+  --foreground:   #0F172A;
+  --card-bg:      #FFFFFF;
+  --border:       #CBD5E1;
+  --muted:        #64748B;
+
+  /* ── Page de connexion ────────────────────────────── */
+  --surface-hero: linear-gradient(135deg, #0F172A 0%, #14532D 55%, #16A34A 100%);
 
   /* ── Sidebar ──────────────────────────────────────── */
   --sidebar-bg:     #0F172A;
   --sidebar-text:   rgba(255,255,255,0.65);
   --sidebar-active: #FFFFFF;
 
-  /* ── Shadows ──────────────────────────────────────── */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  /* ── Shadows premium ──────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.06);
+  --shadow-md: 0 4px 16px rgba(15,23,42,0.12), 0 2px 6px rgba(15,23,42,0.08);
+  --shadow-lg: 0 8px 32px rgba(15,23,42,0.18), 0 4px 12px rgba(15,23,42,0.10);
 }
 
 /* ── Reset ──────────────────────────────────────────── */
@@ -44,14 +47,14 @@ body {
 /* ── Scrollbar fine ─────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: #94A3B8; border-radius: 99px; }
 
-/* ── Card de base ───────────────────────────────────── */
+/* ── Card premium ───────────────────────────────────── */
 .card {
   background: #fff;
   border-radius: 20px;
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.07), 0 1px 3px rgba(15,23,42,0.05);
 }
 
 /* ── Animate pulse personnalisé ─────────────────────── */
@@ -61,7 +64,7 @@ body {
 }
 .pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
 
-/* ── Gradient de fond pour les sections hero ─────────── */
+/* ── Gradient de fond hero ────────────────────────────── */
 .hero-gradient {
-  background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%);
+  background: linear-gradient(135deg, #0F172A 0%, #14532D 55%, #16A34A 100%);
 }

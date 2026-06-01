@@ -7,6 +7,7 @@ import {
   CreditCard, Scale, Banknote, Bell, LogOut,
   ChevronLeft, ChevronRight, ShieldCheck, FileText,
   UserCheck, MapPin, AlertTriangle, ClipboardList, BarChart3,
+  Receipt, Settings,
 } from 'lucide-react'
 import { logout } from '@/lib/auth'
 import { useState } from 'react'
@@ -40,6 +41,7 @@ const NAV_GROUPS = [
   {
     label: 'Finances',
     items: [
+      { href: '/transactions',  icon: Receipt,         label: 'Transactions' },
       { href: '/tontines',      icon: Coins,           label: 'Tontines' },
       { href: '/commissions',   icon: Banknote,        label: 'Commissions' },
     ],
@@ -50,6 +52,7 @@ const NAV_GROUPS = [
       { href: '/rapports',      icon: BarChart3,       label: 'Rapports' },
       { href: '/audit',         icon: ClipboardList,   label: 'Audit' },
       { href: '/notifications', icon: Bell,            label: 'Notifications' },
+      { href: '/parametres',    icon: Settings,        label: 'Paramètres' },
     ],
   },
 ]

@@ -27,16 +27,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-hero)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #14532D 55%, #16A34A 100%)' }}>
       <div className="w-full max-w-md px-4">
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white text-2xl font-black"
-            style={{ background: 'var(--primary)' }}
-          >
-            T
+          <div className="flex justify-center mb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="TontineBénin"
+              style={{ width: 260, height: 260, objectFit: 'contain', borderRadius: 28 }}
+            />
           </div>
           <h1 className="text-2xl font-bold text-white">TontineBénin</h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -56,8 +58,8 @@ export default function LoginPage() {
               <input
                 type="tel"
                 value={telephone}
-                onChange={(e) => setTelephone(e.target.value)}
-                placeholder="Ex: 0197000000"
+                onChange={(e) => setTelephone(e.target.value.trim())}
+                placeholder="Ex: +2290197000000"
                 required
                 className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none transition-all"
                 style={{

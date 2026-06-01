@@ -68,7 +68,7 @@ export default function CommissionsPage() {
                 formatter={(v) => [`${Number(v).toLocaleString('fr-FR')} FCFA`]} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="commissions" name="Cotisations" fill="var(--primary)" radius={[3,3,0,0]} />
-              <Bar dataKey="abonnements" name="Abonnements" fill="var(--primary-vif)" radius={[3,3,0,0]} />
+              <Bar dataKey="padme" name="PADME" fill="var(--primary-vif)" radius={[3,3,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -83,7 +83,7 @@ export default function CommissionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ background: '#F9FAFB', borderBottom: '1px solid var(--border)' }}>
+                <tr style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
                   {['#', 'Collecteur', 'Clients', 'Commissions gagnées'].map(h => (
                     <th key={h} className="text-left px-6 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>{h}</th>
                   ))}
@@ -94,7 +94,7 @@ export default function CommissionsPage() {
                   .sort((a: { totalCommissions: number }, b: { totalCommissions: number }) => b.totalCommissions - a.totalCommissions)
                   .slice(0, 10)
                   .map((c: { id: string; nom: string; telephone: string; nbClients: number; totalCommissions: number }, i) => (
-                    <tr key={c.id} style={{ borderBottom: '1px solid #F3F4F6' }} className="hover:bg-gray-50">
+                    <tr key={c.id} style={{ borderBottom: '1px solid #E2E8F0' }} className="hover:bg-gray-50">
                       <td className="px-6 py-4 font-bold text-sm" style={{ color: i < 3 ? 'var(--warning)' : 'var(--muted)' }}>
                         #{i + 1}
                       </td>

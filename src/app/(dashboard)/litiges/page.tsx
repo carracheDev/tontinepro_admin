@@ -98,7 +98,7 @@ export default function LitigesPage() {
                   </span>
                 </div>
 
-                <p className="text-sm p-3 rounded-xl" style={{ background: '#F9FAFB', color: 'var(--foreground)' }}>
+                <p className="text-sm p-3 rounded-xl" style={{ background: '#F8FAFC', color: 'var(--foreground)' }}>
                   {l.description}
                 </p>
 
@@ -119,7 +119,7 @@ export default function LitigesPage() {
                         onChange={e => setResolutions(p => ({ ...p, [l.id]: e.target.value }))}
                         rows={2}
                         className="flex-1 px-3 py-2 rounded-lg text-sm outline-none resize-none"
-                        style={{ background: '#F9FAFB', border: '1px solid var(--border)' }} />
+                        style={{ background: '#fff', border: '1px solid var(--border)' }} />
                       <button onClick={() => resoudre(l.id)} disabled={loadingId === l.id}
                         className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-bold text-white self-start disabled:opacity-50"
                         style={{ background: 'var(--primary)' }}>
@@ -131,7 +131,7 @@ export default function LitigesPage() {
                         value={motifs[l.id] ?? ''}
                         onChange={e => setMotifs(p => ({ ...p, [l.id]: e.target.value }))}
                         className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                        style={{ background: '#F9FAFB', border: '1px solid var(--border)' }} />
+                        style={{ background: '#fff', border: '1px solid var(--border)' }} />
                       <button onClick={() => rejeter(l.id)} disabled={loadingId === l.id}
                         className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-bold text-white disabled:opacity-50"
                         style={{ background: 'var(--danger)' }}>
