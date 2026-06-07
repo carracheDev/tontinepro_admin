@@ -60,8 +60,8 @@ async function proxy(req: NextRequest, segments: string[]) {
       status: res.status,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (err: any) {
-    const timedOut = err?.name === 'AbortError'
+  } catch (err) {
+    const timedOut = err instanceof Error && err.name === 'AbortError'
     return new NextResponse(
       JSON.stringify({ succes: false, message: timedOut ? 'Délai dépassé (backend lent)' : 'Backend inaccessible' }),
       { status: timedOut ? 504 : 502, headers: { 'Content-Type': 'application/json' } },

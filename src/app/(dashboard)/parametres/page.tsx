@@ -161,7 +161,7 @@ export default function ParametresPage() {
           style={{ background: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.3)' }}>
           <AlertTriangle size={18} style={{ color: '#EF4444' }} />
           <p className="text-sm font-bold" style={{ color: '#EF4444' }}>
-            ⚠️ Mode maintenance actif — l'application est inaccessible aux utilisateurs
+            ⚠️ Mode maintenance actif — l&apos;application est inaccessible aux utilisateurs
           </p>
         </div>
       )}
