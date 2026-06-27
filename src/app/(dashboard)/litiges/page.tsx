@@ -8,19 +8,40 @@ import { Scale, CheckCircle, XCircle, Eye } from 'lucide-react'
 const fetcher = (url: string) => api.get(url).then(r => r.data?.donnees ?? r.data)
 
 type Litige = {
-  id: string; sujet: string; description: string; statut: string; creeLe: string
-  auteur: { nom: string; telephone: string }
+  id: string
+  motif: string
+  statut: string
+  categorie: string
+  creeLe: string
+  client?: { nom: string; telephone: string }
+  transaction?: { montantFcfa: number; type: string } | null
 }
 
-const STATUT_STYLE: Record<string, { bg: string; color: string }> = {
-  OUVERT:   { bg: 'rgba(220,38,38,0.1)',  color: 'var(--danger)'  },
-  EN_COURS: { bg: 'rgba(217,119,6,0.1)',  color: 'var(--warning)' },
-  RESOLU:   { bg: 'rgba(10,124,74,0.1)',  color: 'var(--primary)' },
-  REJETE:   { bg: 'rgba(107,114,128,0.1)',color: 'var(--muted)'   },
+const STATUT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  OUVERT:    { bg: 'rgba(220,38,38,0.1)',  color: 'var(--danger)',  label: 'Ouvert'    },
+  EN_EXAMEN: { bg: 'rgba(217,119,6,0.1)',  color: 'var(--warning)', label: 'En examen' },
+  RESOLU:    { bg: 'rgba(37,99,235,0.1)',  color: 'var(--primary)', label: 'Résolu'    },
+  REJETE:    { bg: 'rgba(107,114,128,0.1)',color: 'var(--muted)',   label: 'Rejeté'    },
 }
+
+const CATEGORIE_LABEL: Record<string, string> = {
+  TRANSACTION: 'Transaction',
+  COLLECTEUR:  'Collecteur',
+  AUTRE:       'Autre',
+}
+
+const FILTRES = [
+  { cle: '',          label: 'Tous'      },
+  { cle: 'OUVERT',    label: 'Ouverts'   },
+  { cle: 'EN_EXAMEN', label: 'En examen' },
+  { cle: 'RESOLU',    label: 'Résolus'   },
+  { cle: 'REJETE',    label: 'Rejetés'   },
+]
 
 export default function LitigesPage() {
-  const { data, mutate } = useSWR('/litiges/en-cours/liste', fetcher)
+  const [filtre, setFiltre] = useState('')
+  const url = '/litiges/liste' + (filtre ? `?statut=${filtre}` : '')
+  const { data, mutate } = useSWR(url, fetcher)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [resolutions, setResolutions] = useState<Record<string, string>>({})
   const [motifs, setMotifs] = useState<Record<string, string>>({})
@@ -68,9 +89,27 @@ export default function LitigesPage() {
 
   return (
     <div className="space-y-4">
+      {/* Filtres par statut */}
+      <div className="flex flex-wrap gap-2">
+        {FILTRES.map(f => {
+          const actif = filtre === f.cle
+          return (
+            <button key={f.cle} onClick={() => setFiltre(f.cle)}
+              className="px-3.5 py-1.5 rounded-full text-sm font-semibold transition-colors"
+              style={{
+                background: actif ? 'var(--primary)' : '#fff',
+                color: actif ? '#fff' : 'var(--muted)',
+                border: '1px solid var(--border)',
+              }}>
+              {f.label}
+            </button>
+          )
+        })}
+      </div>
+
       {msg && (
         <div className="px-4 py-3 rounded-xl text-sm font-medium"
-          style={{ background: msg.type === 'ok' ? 'rgba(10,124,74,0.1)' : 'rgba(220,38,38,0.1)', color: msg.type === 'ok' ? 'var(--primary)' : 'var(--danger)' }}>
+          style={{ background: msg.type === 'ok' ? 'rgba(37,99,235,0.1)' : 'rgba(220,38,38,0.1)', color: msg.type === 'ok' ? 'var(--primary)' : 'var(--danger)' }}>
           {msg.text}
         </div>
       )}
@@ -78,28 +117,40 @@ export default function LitigesPage() {
       {litiges.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 rounded-2xl" style={{ background: '#fff', border: '1px solid var(--border)' }}>
           <Scale size={40} className="mb-3 opacity-30" style={{ color: 'var(--muted)' }} />
-          <p className="font-medium" style={{ color: 'var(--muted)' }}>Aucun litige en cours</p>
+          <p className="font-medium" style={{ color: 'var(--muted)' }}>Aucun litige</p>
         </div>
       ) : (
         <div className="space-y-3">
           {litiges.map((l) => {
-            const s = STATUT_STYLE[l.statut] ?? { bg: '#F3F4F6', color: '#6B7280' }
+            const s = STATUT_STYLE[l.statut] ?? { bg: '#F3F4F6', color: '#6B7280', label: l.statut }
             return (
               <div key={l.id} className="rounded-2xl p-5 space-y-3" style={{ background: '#fff', border: '1px solid var(--border)' }}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-bold" style={{ color: 'var(--foreground)' }}>{l.sujet}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#F1F5F9', color: 'var(--foreground)' }}>
+                        {CATEGORIE_LABEL[l.categorie] ?? l.categorie}
+                      </span>
+                      {l.transaction && (
+                        <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                          · {l.transaction.type} {l.transaction.montantFcfa?.toLocaleString('fr-FR')} FCFA
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-bold mt-1.5" style={{ color: 'var(--foreground)' }}>
+                      {l.client?.nom ?? 'Client inconnu'}
+                    </p>
                     <p className="text-sm mt-0.5" style={{ color: 'var(--muted)' }}>
-                      {l.auteur?.nom} · {l.auteur?.telephone} · {new Date(l.creeLe).toLocaleDateString('fr-FR')}
+                      {l.client?.telephone} · {new Date(l.creeLe).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0" style={{ background: s.bg, color: s.color }}>
-                    {l.statut}
+                    {s.label}
                   </span>
                 </div>
 
                 <p className="text-sm p-3 rounded-xl" style={{ background: '#F8FAFC', color: 'var(--foreground)' }}>
-                  {l.description}
+                  {l.motif}
                 </p>
 
                 {/* Actions selon statut */}
@@ -111,7 +162,7 @@ export default function LitigesPage() {
                   </button>
                 )}
 
-                {l.statut === 'EN_COURS' && (
+                {l.statut === 'EN_EXAMEN' && (
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <textarea placeholder="Résolution (obligatoire)..."
@@ -139,6 +190,13 @@ export default function LitigesPage() {
                       </button>
                     </div>
                   </div>
+                )}
+
+                {/* Résolution affichée pour les litiges clôturés */}
+                {(l.statut === 'RESOLU' || l.statut === 'REJETE') && (
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                    {l.statut === 'RESOLU' ? '✅ Résolu' : '❌ Rejeté'}
+                  </p>
                 )}
               </div>
             )
