@@ -1,0 +1,25 @@
+name: Scan des secrets (Gitleaks)
+
+# Cherche les mots de passe / clés / tokens laissés dans le code ET dans tout
+# l'historique git, à chaque push. Échoue (rouge) si un secret est détecté.
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code (tout l'historique)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scanner les secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
