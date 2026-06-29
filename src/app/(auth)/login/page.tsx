@@ -27,7 +27,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #14532D 55%, #16A34A 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #2563EB 100%)' }}>
       <div className="w-full max-w-md px-4">
 
         {/* Logo */}
@@ -103,7 +103,7 @@ export default function LoginPage() {
               disabled={loading || !telephone || !pin}
               className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all mt-2"
               style={{
-                background: loading || !telephone || !pin ? 'rgba(10,124,74,0.4)' : 'var(--primary)',
+                background: loading || !telephone || !pin ? 'rgba(37,99,235,0.4)' : 'var(--primary)',
                 cursor: loading ? 'not-allowed' : 'pointer',
               }}
             >

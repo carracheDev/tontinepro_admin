@@ -3,6 +3,7 @@
 import useSWR from 'swr'
 import { useState } from 'react'
 import { api, extraireErreur } from '@/lib/api'
+import { COLORS } from '@/lib/colors'
 import {
   CheckCircle, XCircle, Clock, AlertTriangle,
   Wallet, TrendingUp, Timer, BadgeCheck,
@@ -146,121 +147,226 @@ export default function RetraitsPage() {
       {/* Modal rejet */}
       {rejetId && <ModalRejet onClose={() => setRejetId(null)} onConfirm={(m) => rejeter(rejetId, m)} />}
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard titre="En attente" valeur={retraits.length} icone={Clock}
-          couleur="var(--warning)" badge={retraits.length > 0 ? 'urgent' : undefined} badgeCouleur="var(--warning)" />
-        <KpiCard titre="Volume en attente" valeur={fmtFcfa(totalEnAttente)} icone={Wallet} couleur="var(--warning)" />
-        <KpiCard titre="Montant max" valeur={fmtFcfa(montantMax)} icone={TrendingUp} couleur="var(--danger)" />
-        <KpiCard titre="Seuil validation" valeur="50 000 FCFA" icone={BadgeCheck} couleur="var(--primary)" />
+      {/* KPIs — Design moderne — CHARTE COHÉRENTE */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { titre: 'En attente', valeur: retraits.length, icone: Clock, couleur: COLORS.warning, trend: retraits.length > 5 ? 18 : -3 },
+          { titre: 'Volume en attente', valeur: fmtFcfa(totalEnAttente), icone: Wallet, couleur: COLORS.warning, trend: 22 },
+          { titre: 'Montant max', valeur: fmtFcfa(montantMax), icone: TrendingUp, couleur: COLORS.danger, trend: 7 },
+          { titre: 'Seuil validation', valeur: '50 000 FCFA', icone: BadgeCheck, couleur: COLORS.primary, trend: 0 },
+        ].map(({ titre, valeur, icone: Icon, couleur, trend }) => (
+          <div
+            key={titre}
+            className="rounded-2xl p-6 transition-all"
+            style={{
+              background: '#FFFFFF',
+              border: `1px solid ${couleur}15`,
+              boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLDivElement).style.boxShadow = `0 12px 32px ${couleur}18`
+              ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)'
+              ;(e.currentTarget as HTMLDivElement).style.borderColor = `${couleur}35`
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(15,23,42,0.06)'
+              ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
+              ;(e.currentTarget as HTMLDivElement).style.borderColor = `${couleur}15`
+            }}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${couleur}12` }}>
+                <Icon size={22} style={{ color: couleur }} strokeWidth={1.8} />
+              </div>
+              {trend !== 0 && (
+                <div
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold"
+                  style={{
+                    background: trend > 0 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+                    color: trend > 0 ? '#EF4444' : '#10B981',
+                  }}
+                >
+                  {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
+                </div>
+              )}
+            </div>
+            <p className="text-4xl font-black leading-none mb-2" style={{ color: couleur, fontVariantNumeric: 'tabular-nums' }}>
+              {valeur}
+            </p>
+            <p className="text-sm font-bold" style={{ color: '#0F172A' }}>
+              {titre}
+            </p>
+          </div>
+        ))}
       </div>
 
-      {/* Courbe volume 7 jours */}
-      <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between mb-4">
+      {/* Courbe volume 7 jours — MODERNE */}
+      <div
+        className="rounded-2xl p-6 transition-all"
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
+        }}
+      >
+        <div className="flex items-start justify-between mb-6">
           <div>
-            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Volume retraits — 7 derniers jours</h3>
-            <p className="text-xs" style={{ color: 'var(--muted)' }}>Montants demandés (tous statuts)</p>
+            <h3 className="font-black text-base" style={{ color: '#0F172A' }}>
+              Volume retraits — 7 derniers jours
+            </h3>
+            <p className="text-sm mt-2" style={{ color: '#9CA3B8' }}>
+              Montants demandés (tous statuts)
+            </p>
           </div>
-          <LiveBadge />
+          <span className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl" style={{ color: '#F59E0B', background: '#FFFBEB', border: '1px solid #FEE3B2' }}>
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            refresh 15s
+          </span>
         </div>
-        <ResponsiveContainer width="100%" height={160}>
-          <AreaChart data={areaData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={areaData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="gRetrait" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--warning)" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="var(--warning)" stopOpacity={0} />
+                <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
-            <XAxis dataKey="jour" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} axisLine={false} tickLine={false} width={32} />
-            <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB', fontSize: 12 }}
-              formatter={(v) => [fmtFcfa(Number(v)), 'Volume']} cursor={{ stroke: 'var(--warning)', strokeWidth: 1 }} />
-            <Area type="monotone" dataKey="montant" stroke="var(--warning)" strokeWidth={2}
-              fill="url(#gRetrait)" dot={{ fill: 'var(--warning)', r: 3 }} />
+            <CartesianGrid strokeDasharray="0" stroke="#F1F5F9" vertical={false} />
+            <XAxis dataKey="jour" tick={{ fontSize: 11, fill: '#CBD5E1' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: '#CBD5E1' }} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} axisLine={false} tickLine={false} width={32} />
+            <Tooltip
+              contentStyle={{ borderRadius: 14, border: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', padding: '10px 14px' }}
+              formatter={(v) => [fmtFcfa(Number(v)), 'Volume']}
+              cursor={{ stroke: '#F59E0B', strokeWidth: 1, strokeDasharray: '4 2' }}
+            />
+            <Area type="monotone" dataKey="montant" stroke="#F59E0B" strokeWidth={2.5}
+              fill="url(#gRetrait)" dot={{ fill: '#F59E0B', r: 3.5, strokeWidth: 0 }} activeDot={{ r: 6, fill: '#F59E0B', strokeWidth: 3, stroke: '#fff' }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      {/* File d'approbation */}
-      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', background: '#fff' }}>
-        <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: 'var(--border)' }}>
-          <AlertTriangle size={18} style={{ color: 'var(--warning)' }} />
-          <h2 className="font-bold flex-1" style={{ color: 'var(--foreground)' }}>
-            File d&apos;approbation
-          </h2>
-          {retraits.length > 0 && (
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full"
-              style={{ background: 'rgba(217,119,6,0.12)', color: 'var(--warning)' }}>
-              {retraits.length} en attente
-            </span>
-          )}
-          <LiveBadge />
+      {/* File d'approbation — RETRAIT CARDS MODERNES */}
+      <div className="space-y-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="font-black text-2xl" style={{ color: '#0F172A' }}>
+              File d&apos;approbation
+            </h2>
+            <p className="text-sm mt-2" style={{ color: '#9CA3B8' }}>
+              {retraits.length} retrait{retraits.length !== 1 ? 's' : ''} ≥ 50 000 FCFA en attente
+            </p>
+          </div>
+          <span className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl" style={{ color: '#F59E0B', background: '#FFFBEB', border: '1px solid #FEE3B2' }}>
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            Live
+          </span>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-16 gap-2" style={{ color: 'var(--muted)' }}>
-            <Clock size={20} className="animate-spin" /> Chargement...
+          <div className="flex items-center justify-center py-20 gap-3" style={{ color: '#9CA3B8' }}>
+            <Clock size={20} className="animate-spin" />
+            <span className="text-sm font-medium">Chargement des retraits...</span>
           </div>
         ) : retraits.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16" style={{ color: 'var(--muted)' }}>
-            <CheckCircle size={40} className="mb-3 opacity-30" />
-            <p className="font-semibold">File vide — aucun retrait en attente</p>
-            <p className="text-xs mt-1 opacity-70">Les retraits ≥ 50 000 FCFA apparaissent ici</p>
+          <div className="rounded-2xl border-2 border-dashed p-12 flex flex-col items-center justify-center" style={{ borderColor: '#E5E7EB' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: '#EFF4FF' }}>
+              <CheckCircle size={32} style={{ color: '#2563EB', opacity: 0.5 }} />
+            </div>
+            <p className="font-bold text-base" style={{ color: '#0F172A' }}>File vide</p>
+            <p className="text-sm mt-2" style={{ color: '#9CA3B8' }}>Aucun retrait ≥ 50 000 FCFA en attente</p>
           </div>
         ) : (
-          <div>
-            {retraits.map((r, i) => (
-              <div key={r.id} className="px-6 py-5" style={{ borderBottom: i < retraits.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
-                      style={{ background: 'var(--primary)', fontSize: 13 }}>
+          <div className="grid grid-cols-1 gap-5">
+            {retraits.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-3xl p-6 transition-all border-2"
+                style={{
+                  background: '#FFFFFF',
+                  border: '2px solid #F59E0B35',
+                  boxShadow: '0 4px 16px #F59E0B18',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 32px #F59E0B25, 0 0 0 8px #F59E0B08'
+                  ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'
+                  ;(e.currentTarget as HTMLDivElement).style.borderColor = '#F59E0B50'
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px #F59E0B18'
+                  ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
+                  ;(e.currentTarget as HTMLDivElement).style.borderColor = '#F59E0B35'
+                }}
+              >
+                {/* En-tête : Avatar + Infos */}
+                <div className="flex items-start justify-between gap-5 mb-5">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold shrink-0"
+                      style={{ background: '#2563EB', fontSize: 18 }}
+                    >
                       {r.utilisateur?.nom?.charAt(0)?.toUpperCase()}
                     </div>
-                    <div>
-                      <p className="font-bold" style={{ color: 'var(--foreground)' }}>{r.utilisateur?.nom}</p>
-                      <p className="text-sm" style={{ color: 'var(--muted)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-base" style={{ color: '#0F172A' }}>
+                        {r.utilisateur?.nom}
+                      </p>
+                      <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
                         {r.utilisateur?.telephone}
-                        {r.tontine && ` · ${r.tontine.emoji ?? '🪣'} ${r.tontine.nom}`}
                       </p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
-                        {fmtDate(r.creeLe)}
-                        {r.operateur && ` · ${r.operateur}`}
-                        {r.numeroDest && ` · ${r.numeroDest}`}
-                      </p>
+                      {r.tontine && (
+                        <p className="text-sm mt-1" style={{ color: '#9CA3B8' }}>
+                          {r.tontine.emoji ?? '🪣'} <span style={{ color: '#0F172A', fontWeight: '600' }}>{r.tontine.nom}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-black" style={{ color: 'var(--warning)', fontVariantNumeric: 'tabular-nums' }}>
-                      {r.montantFcfa.toLocaleString('fr-FR')} FCFA
+
+                  {/* Montant GROS */}
+                  <div className="text-right shrink-0">
+                    <p className="text-5xl font-black" style={{ color: '#F59E0B', fontVariantNumeric: 'tabular-nums' }}>
+                      {r.montantFcfa.toLocaleString('fr-FR')}
                     </p>
+                    <p className="text-xs font-bold mt-1" style={{ color: '#6B7280' }}>FCFA</p>
                     {r.montantNetFcfa && r.montantNetFcfa !== r.montantFcfa && (
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
-                        Net client : {r.montantNetFcfa.toLocaleString('fr-FR')} FCFA
+                      <p className="text-xs mt-2" style={{ color: '#9CA3B8' }}>
+                        Net : {r.montantNetFcfa.toLocaleString('fr-FR')} FCFA
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setRejetId(r.id)}
+                {/* Métadonnées */}
+                <p className="text-xs mb-5" style={{ color: '#9CA3B8' }}>
+                  {fmtDate(r.creeLe)}
+                  {r.operateur && ` · ${r.operateur}`}
+                  {r.numeroDest && ` · ${r.numeroDest}`}
+                  {' '}· ID : {r.id.slice(0, 8)}…
+                </p>
+
+                {/* Boutons d'action */}
+                <div className="flex gap-3 flex-wrap">
+                  <button
+                    onClick={() => setRejetId(r.id)}
                     disabled={loadingId === r.id}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80 disabled:opacity-40"
-                    style={{ background: 'rgba(220,38,38,0.08)', color: 'var(--danger)', border: '1px solid rgba(220,38,38,0.25)' }}>
-                    <XCircle size={16} /> Rejeter
+                    className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+                    style={{
+                      background: '#FECACA',
+                      color: '#DC2626',
+                      border: '1px solid #FCA5A5',
+                    }}
+                  >
+                    <XCircle size={18} />
+                    <span>Rejeter</span>
                   </button>
-                  <button onClick={() => valider(r.id)}
+                  <button
+                    onClick={() => valider(r.id)}
                     disabled={loadingId === r.id}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
-                    style={{ background: 'var(--primary)' }}>
-                    <CheckCircle size={16} />
-                    {loadingId === r.id ? 'Traitement…' : 'Approuver'}
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
+                    style={{ background: '#2563EB' }}
+                  >
+                    <CheckCircle size={18} />
+                    <span>{loadingId === r.id ? 'Traitement…' : 'Approuver'}</span>
                   </button>
-                  <span className="text-xs ml-auto" style={{ color: 'var(--muted)' }}>
-                    ID : {r.id.slice(0, 8)}…
-                  </span>
                 </div>
               </div>
             ))}

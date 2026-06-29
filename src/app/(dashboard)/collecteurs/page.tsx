@@ -31,7 +31,7 @@ function fmt(n: number) {
 }
 
 function scoreColor(s: number) {
-  if (s >= 75) return '#16A34A'
+  if (s >= 75) return '#2563EB'
   if (s >= 60) return '#1A56DB'
   if (s >= 40) return '#D97706'
   return '#DC2626'
@@ -96,7 +96,7 @@ export default function CollecteursPage() {
                 formatter={(v, n) => [`${fmt(Number(v))} FCFA`, n === 'volumeCollecte' ? 'Volume' : 'Commissions']} />
               <Bar dataKey="volumeCollecte" name="Volume collecté" radius={[4, 4, 0, 0]}>
                 {top10.map((_, i) => (
-                  <Cell key={i} fill={i === 0 ? '#16A34A' : i <= 2 ? '#86EFAC' : '#D1FAE5'} />
+                  <Cell key={i} fill={i === 0 ? '#2563EB' : i <= 2 ? '#86EFAC' : '#D1FAE5'} />
                 ))}
               </Bar>
             </BarChart>
@@ -181,7 +181,7 @@ export default function CollecteursPage() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className="text-sm font-bold" style={{ color: (c.tauxRegularite ?? 0) >= 0.8 ? '#16A34A' : '#D97706' }}>
+                      <span className="text-sm font-bold" style={{ color: (c.tauxRegularite ?? 0) >= 0.8 ? '#2563EB' : '#D97706' }}>
                         {Math.round((c.tauxRegularite ?? 0) * 100)}%
                       </span>
                     </td>

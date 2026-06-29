@@ -16,7 +16,7 @@ type DocKyc = {
   id: string
   typeDocument: string
   statut: 'EN_ATTENTE' | 'VALIDE' | 'REJETE'
-  cheminFichier?: string
+  urlDocument?: string
   creeLe: string
   utilisateur?: { id: string; nom: string; telephone: string }
 }
@@ -30,6 +30,179 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
+function typeFichierKyc(url?: string): 'image' | 'pdf' | 'autre' {
+  if (!url) return 'autre'
+
+  const lower = url.toLowerCase()
+  const path = lower.split(/[?#]/)[0]
+
+  if (lower.startsWith('data:image/')) return 'image'
+  if (lower.startsWith('data:application/pdf')) return 'pdf'
+  if (/\.(jpg|jpeg|png|gif|webp)$/.test(path)) return 'image'
+  if (/\.pdf$/.test(path) || lower.includes('application/pdf')) return 'pdf'
+
+  return 'autre'
+}
+
+// ─── Modal Viewer de documents ────────────────────────────────────────────────
+function ModalViewer({
+  doc,
+  onClose,
+  onValider,
+  onRejeterClick,
+  loadingId
+}: {
+  doc: DocKyc
+  onClose: () => void
+  onValider: (id: string) => void
+  onRejeterClick: (id: string) => void
+  loadingId: string | null
+}) {
+  const [zoom, setZoom] = useState(100)
+  const [fullscreen, setFullscreen] = useState(false)
+
+  const typeFichier = typeFichierKyc(doc.urlDocument)
+  const isImage = typeFichier === 'image'
+  const isPdf = typeFichier === 'pdf'
+  const pdfSrc = doc.urlDocument?.startsWith('data:')
+    ? doc.urlDocument
+    : `${doc.urlDocument}#toolbar=0`
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
+      <div className="w-full max-w-4xl rounded-3xl p-6 space-y-6" style={{ background: '#fff', maxHeight: '90vh', overflowY: 'auto' }}>
+
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-black" style={{ color: '#0F172A' }}>
+              Vérification KYC
+            </h2>
+            <p className="text-sm mt-2" style={{ color: '#9CA3B8' }}>
+              Examinez le document avant validation
+            </p>
+          </div>
+          <button onClick={onClose} className="text-2xl" style={{ color: '#9CA3B8' }}>
+            ✕
+          </button>
+        </div>
+
+        {/* Client Info */}
+        <div className="rounded-2xl p-5" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase" style={{ color: '#6B7280' }}>Client</p>
+              <p className="text-base font-black mt-1" style={{ color: '#0F172A' }}>
+                {doc.utilisateur?.nom ?? 'Inconnu'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase" style={{ color: '#6B7280' }}>Type</p>
+              <p className="text-base font-black mt-1" style={{ color: '#0F172A' }}>
+                {TYPE_LABEL[doc.typeDocument] ?? doc.typeDocument}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase" style={{ color: '#6B7280' }}>Soumis le</p>
+              <p className="text-sm font-black mt-1" style={{ color: '#0F172A' }}>
+                {fmtDate(doc.creeLe)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Document Viewer avec Zoom */}
+        <div className="rounded-2xl border-2 flex flex-col" style={{ borderColor: '#E5E7EB', minHeight: '600px', background: '#F9FAFB' }}>
+          {/* Toolbar zoom - seulement pour images */}
+          {isImage && (
+            <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: '#E5E7EB' }}>
+              <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="px-2 py-1 rounded text-xs font-bold" style={{ background: '#2563EB', color: '#fff' }}>− Zoom</button>
+              <span className="text-xs font-bold" style={{ color: '#6B7280', minWidth: '50px', textAlign: 'center' }}>{zoom}%</span>
+              <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="px-2 py-1 rounded text-xs font-bold" style={{ background: '#2563EB', color: '#fff' }}>+ Zoom</button>
+              <div style={{ flex: 1 }} />
+              <button onClick={() => setFullscreen(!fullscreen)} className="px-3 py-1 rounded text-xs font-bold" style={{ background: '#3B82F6', color: '#fff' }}>⛶ {fullscreen ? 'Normal' : 'Fullscreen'}</button>
+            </div>
+          )}
+
+          {/* Contenu */}
+          <div className="flex-1 overflow-auto flex items-center justify-center p-6">
+            {doc.urlDocument ? (
+              <>
+                {isImage ? (
+                  <img src={doc.urlDocument} alt="Document KYC" className="rounded-xl object-contain" style={{ width: `${zoom}%`, maxHeight: '100%' }} />
+                ) : isPdf ? (
+                  <div className="w-full space-y-3">
+                    <object
+                      data={pdfSrc}
+                      type="application/pdf"
+                      className="rounded-xl w-full"
+                      style={{ border: 'none', minHeight: '560px', background: '#fff' }}
+                    >
+                      <iframe
+                        src={pdfSrc}
+                        title="Document KYC PDF"
+                        className="rounded-xl w-full"
+                        style={{ border: 'none', minHeight: '560px', background: '#fff' }}
+                      />
+                    </object>
+                    <div className="flex items-center justify-center">
+                      <a
+                        href={doc.urlDocument}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold"
+                        style={{ color: '#fff', background: '#3B82F6' }}
+                      >
+                        <ExternalLink size={14} />
+                        Ouvrir le PDF dans un nouvel onglet
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <FileText size={48} style={{ color: '#9CA3B8', marginBottom: '1rem' }} />
+                    <p style={{ color: '#9CA3B8' }}>Document non-visualisable</p>
+                    <a href={doc.urlDocument} target="_blank" rel="noreferrer" className="text-sm font-bold mt-3 inline-block" style={{ color: '#2563EB' }}>Ouvrir dans un nouvel onglet →</a>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p style={{ color: '#9CA3B8' }}>Aucun fichier disponible</p>
+            )}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => onRejeterClick(doc.id)}
+            disabled={loadingId === doc.id}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+            style={{
+              background: '#FECACA',
+              color: '#DC2626',
+              border: '1px solid #FCA5A5',
+            }}
+          >
+            <XCircle size={18} />
+            Rejeter
+          </button>
+          <button
+            onClick={() => onValider(doc.id)}
+            disabled={loadingId === doc.id}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 ml-auto"
+            style={{ background: '#2563EB' }}
+          >
+            <CheckCircle2 size={18} />
+            {loadingId === doc.id ? 'Traitement…' : 'Valider'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal Motif de rejet ─────────────────────────────────────────────────────
 function ModalRejet({ onClose, onConfirm }: { onClose: () => void; onConfirm: (m: string) => void }) {
   const [motif, setMotif] = useState('')
   return (
@@ -61,6 +234,7 @@ export default function KycPage() {
 
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [rejetId, setRejetId] = useState<string | null>(null)
+  const [viewerId, setViewerId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   const docs: DocKyc[] = Array.isArray(data) ? data : data?.documents ?? []
@@ -112,6 +286,15 @@ export default function KycPage() {
         </div>
       )}
       {rejetId && <ModalRejet onClose={() => setRejetId(null)} onConfirm={m => rejeter(rejetId, m)} />}
+      {viewerId && (
+        <ModalViewer
+          doc={docs.find(d => d.id === viewerId)!}
+          onClose={() => setViewerId(null)}
+          onValider={(id) => { setViewerId(null); valider(id); }}
+          onRejeterClick={(id) => { setViewerId(null); setRejetId(id); }}
+          loadingId={loadingId}
+        />
+      )}
 
       {/* KPIs + camembert */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -160,15 +343,14 @@ export default function KycPage() {
                         </p>
                         <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{fmtDate(doc.creeLe)}</p>
                       </div>
-                      {doc.cheminFichier && (
-                        <a href={doc.cheminFichier} target="_blank" rel="noreferrer"
-                          className="flex items-center gap-1 text-xs font-semibold shrink-0"
-                          style={{ color: 'var(--primary)' }}>
-                          <ExternalLink size={13} /> Voir doc
-                        </a>
-                      )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      <button onClick={() => setViewerId(doc.id)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                        style={{ color: '#3B82F6', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                        <FileText size={14} />
+                        Examiner document
+                      </button>
                       <button onClick={() => setRejetId(doc.id)} disabled={loadingId === doc.id}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-40"
                         style={{ background: 'rgba(220,38,38,0.08)', color: 'var(--danger)', border: '1px solid rgba(220,38,38,0.2)' }}>
@@ -198,7 +380,7 @@ export default function KycPage() {
               <PieChart>
                 <Pie data={pieData} cx="50%" cy="45%" innerRadius={50} outerRadius={75} paddingAngle={3} dataKey="value">
                   {pieData.map((_, i) => (
-                    <Cell key={i} fill={['#16A34A', '#D97706', '#DC2626'][i]} />
+                    <Cell key={i} fill={['#2563EB', '#D97706', '#DC2626'][i]} />
                   ))}
                 </Pie>
                 <Tooltip contentStyle={{ borderRadius: 10, fontSize: 12 }}
@@ -213,7 +395,7 @@ export default function KycPage() {
           )}
           <div className="space-y-2 mt-2">
             {[
-              { label: 'Validés', val: valides, color: '#16A34A' },
+              { label: 'Validés', val: valides, color: '#2563EB' },
               { label: 'En attente', val: enAttente, color: '#D97706' },
               { label: 'Rejetés', val: rejetes, color: '#DC2626' },
             ].map(({ label, val, color }) => (

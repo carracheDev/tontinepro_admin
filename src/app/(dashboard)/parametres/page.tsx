@@ -26,7 +26,7 @@ const GROUPES = [
   {
     label: 'Commissions & Taux',
     icon: Percent,
-    couleur: '#16A34A',
+    couleur: '#2563EB',
     cles: ['TAUX_COMMISSION_COTISATION', 'TAUX_INTERET_MICRO_CREDIT', 'TAUX_COMMISSION_PADME'],
     type: 'percent',
   },
@@ -133,7 +133,7 @@ export default function ParametresPage() {
       {/* Toast */}
       {toast && (
         <div className="fixed top-5 right-5 z-50 px-5 py-3.5 rounded-2xl text-sm font-semibold shadow-xl flex items-center gap-2"
-          style={{ background: toast.type === 'ok' ? '#16A34A' : '#EF4444', color: '#fff' }}>
+          style={{ background: toast.type === 'ok' ? '#2563EB' : '#EF4444', color: '#fff' }}>
           <CheckCircle2 size={16} />
           {toast.text}
         </div>
@@ -149,7 +149,7 @@ export default function ParametresPage() {
         </div>
         <button onClick={() => mutate()}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-          style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
+          style={{ background: '#EFF4FF', color: '#2563EB', border: '1px solid #BFDBFE' }}>
           <RefreshCw size={14} />
           Recharger
         </button>
@@ -221,7 +221,7 @@ export default function ParametresPage() {
                             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
                             style={{
                               background: maintenanceActive ? 'rgba(239,68,68,0.1)' : 'rgba(22,163,74,0.1)',
-                              color: maintenanceActive ? '#EF4444' : '#16A34A',
+                              color: maintenanceActive ? '#EF4444' : '#2563EB',
                               border: `1.5px solid ${maintenanceActive ? 'rgba(239,68,68,0.3)' : 'rgba(22,163,74,0.3)'}`,
                             }}
                           >

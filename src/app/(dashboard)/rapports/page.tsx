@@ -23,7 +23,7 @@ const RAPPORTS: Rapport[] = [
   {
     id: 'tx-csv', titre: 'Transactions CSV', format: 'CSV',
     description: 'Toutes les cotisations et retraits avec montants, statuts et opérateurs.',
-    icon: FileSpreadsheet, couleur: '#16A34A', bg: 'rgba(22,163,74,0.08)',
+    icon: FileSpreadsheet, couleur: '#2563EB', bg: 'rgba(22,163,74,0.08)',
     endpoint: '/rapports/exports/transactions.csv', filename: 'transactions.csv',
   },
   {
@@ -53,7 +53,7 @@ const RAPPORTS: Rapport[] = [
   {
     id: 'agents-pdf', titre: 'Rapport collecteurs PDF', format: 'PDF',
     description: 'Performance des agents terrain : volume collecté, commissions, clients.',
-    icon: Users, couleur: '#16A34A', bg: 'rgba(22,163,74,0.08)',
+    icon: Users, couleur: '#2563EB', bg: 'rgba(22,163,74,0.08)',
     endpoint: '/rapports/agents.pdf', filename: 'rapport-collecteurs.pdf',
   },
   {
@@ -101,7 +101,7 @@ export default function RapportsPage() {
     <div className="space-y-8 max-w-350">
       {/* Header informatif */}
       <div className="rounded-2xl p-5 flex items-start gap-4"
-        style={{ background: 'var(--primary-light)', border: '1px solid #BBF7D0' }}>
+        style={{ background: 'var(--primary-light)', border: '1px solid #BFDBFE' }}>
         <Download size={22} style={{ color: 'var(--primary)', marginTop: 2 }} />
         <div>
           <p className="font-bold text-sm" style={{ color: 'var(--primary)' }}>Exports disponibles à la demande</p>
@@ -157,7 +157,7 @@ function RapportCard({ rapport, loading, success, error, onDownload }: {
           <div className="flex items-center gap-2">
             <p className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>{rapport.titre}</p>
             <span className="text-xs font-bold px-1.5 py-0.5 rounded"
-              style={{ background: rapport.format === 'CSV' ? 'rgba(22,163,74,0.1)' : 'rgba(2,132,199,0.1)', color: rapport.format === 'CSV' ? '#16A34A' : '#0284C7' }}>
+              style={{ background: rapport.format === 'CSV' ? 'rgba(22,163,74,0.1)' : 'rgba(2,132,199,0.1)', color: rapport.format === 'CSV' ? '#2563EB' : '#0284C7' }}>
               {rapport.format}
             </span>
           </div>
@@ -173,7 +173,7 @@ function RapportCard({ rapport, loading, success, error, onDownload }: {
 
       <button onClick={onDownload} disabled={loading}
         className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50 mt-auto"
-        style={{ background: success ? '#16A34A' : rapport.couleur, color: '#fff' }}>
+        style={{ background: success ? '#2563EB' : rapport.couleur, color: '#fff' }}>
         {loading ? (
           <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Génération…</>
         ) : success ? (

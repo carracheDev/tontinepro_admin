@@ -37,7 +37,7 @@ function fmtDate(d: string) {
 }
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Coins; couleur: string }> = {
-  COTISATION:          { label: 'Cotisation',       icon: Coins,            couleur: '#16A34A' },
+  COTISATION:          { label: 'Cotisation',       icon: Coins,            couleur: '#2563EB' },
   RETRAIT:             { label: 'Retrait',           icon: ArrowUpFromLine,  couleur: '#F59E0B' },
   DISTRIBUTION_GROUPE: { label: 'Distribution',     icon: ArrowDownToLine,  couleur: '#3B82F6' },
   REMBOURSEMENT:       { label: 'Remboursement',     icon: RefreshCw,        couleur: '#8B5CF6' },
@@ -45,7 +45,7 @@ const TYPE_CONFIG: Record<string, { label: string; icon: typeof Coins; couleur: 
 }
 
 const STATUT_CONFIG: Record<string, { label: string; couleur: string; bg: string; icon: typeof CheckCircle2 }> = {
-  SUCCES:     { label: 'Succès',      couleur: '#16A34A', bg: 'rgba(22,163,74,0.1)',  icon: CheckCircle2 },
+  SUCCES:     { label: 'Succès',      couleur: '#2563EB', bg: 'rgba(22,163,74,0.1)',  icon: CheckCircle2 },
   ECHOUEE:    { label: 'Échouée',     couleur: '#EF4444', bg: 'rgba(239,68,68,0.1)',  icon: XCircle },
   EN_ATTENTE: { label: 'En attente',  couleur: '#F59E0B', bg: 'rgba(245,158,11,0.1)', icon: Clock },
   ANNULEE:    { label: 'Annulée',     couleur: '#6B7280', bg: 'rgba(107,114,128,0.1)', icon: XCircle },
@@ -104,7 +104,7 @@ export default function TransactionsPage() {
         <button
           onClick={() => mutate()}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-          style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}
+          style={{ background: '#EFF4FF', color: '#2563EB', border: '1px solid #BFDBFE' }}
         >
           <RefreshCw size={14} />
           Actualiser
@@ -176,7 +176,7 @@ export default function TransactionsPage() {
         {/* Header tableau */}
         <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
           <div className="flex items-center gap-2">
-            <Receipt size={16} style={{ color: '#16A34A' }} />
+            <Receipt size={16} style={{ color: '#2563EB' }} />
             <span className="font-bold text-sm" style={{ color: '#0F172A' }}>
               {txFiltrees.length > 0 ? `${txFiltrees.length} transaction(s)` : 'Transactions'}
             </span>
@@ -301,7 +301,7 @@ export default function TransactionsPage() {
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="px-3 py-1.5 rounded-lg text-sm font-semibold disabled:opacity-40 transition-all"
-                style={{ background: '#16A34A', color: '#fff' }}
+                style={{ background: '#2563EB', color: '#fff' }}
               >
                 Suivant →
               </button>

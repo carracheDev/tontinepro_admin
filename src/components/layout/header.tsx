@@ -55,11 +55,11 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Live indicator */}
+        {/* Live indicator (vert = statut « en ligne ») */}
         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-          style={{ background: 'var(--primary-light)', border: '1px solid #BBF7D0' }}>
+          style={{ background: 'rgba(16,163,74,0.08)', border: '1px solid #BFDBFE' }}>
           <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs font-semibold" style={{ color: 'var(--primary)' }}>Live</span>
+          <span className="text-xs font-semibold" style={{ color: '#2563EB' }}>Live</span>
         </div>
 
         {/* Cloche avec badge */}

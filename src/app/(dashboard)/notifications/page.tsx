@@ -117,7 +117,7 @@ export default function NotificationsPage() {
         {/* Feedback */}
         {msg && (
           <div className="px-4 py-3 rounded-xl text-sm font-medium"
-            style={{ background: msg.type === 'ok' ? 'rgba(10,124,74,0.1)' : 'rgba(220,38,38,0.1)', color: msg.type === 'ok' ? 'var(--primary)' : 'var(--danger)' }}>
+            style={{ background: msg.type === 'ok' ? 'rgba(37,99,235,0.1)' : 'rgba(220,38,38,0.1)', color: msg.type === 'ok' ? 'var(--primary)' : 'var(--danger)' }}>
             {msg.text}
           </div>
         )}

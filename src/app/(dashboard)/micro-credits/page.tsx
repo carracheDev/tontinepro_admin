@@ -39,7 +39,7 @@ type CreditActif = {
 function fmt(n: number) { return n.toLocaleString('fr-FR') }
 
 function ProgressBar({ pct, statut }: { pct: number; statut: string }) {
-  const color = statut === 'EN_DEFAUT' ? '#DC2626' : statut === 'TERMINE' ? '#16A34A' : '#1A56DB'
+  const color = statut === 'EN_DEFAUT' ? '#DC2626' : statut === 'TERMINE' ? '#2563EB' : '#1A56DB'
   return (
     <div className="w-full rounded-full overflow-hidden" style={{ height: 8, background: '#F3F4F6' }}>
       <div style={{ width: `${pct}%`, height: '100%', background: color, transition: 'width 0.4s' }} />
@@ -52,7 +52,7 @@ function BadgeStatut({ statut }: { statut: string }) {
     EN_ATTENTE: { label: 'En attente',  bg: 'rgba(217,119,6,0.1)',  color: '#D97706', icon: <Clock size={11} /> },
     ACTIF:      { label: 'Actif',       bg: 'rgba(26,86,219,0.1)',  color: '#1A56DB', icon: <TrendingUp size={11} /> },
     EN_DEFAUT:  { label: 'En défaut',   bg: 'rgba(220,38,38,0.1)',  color: '#DC2626', icon: <AlertTriangle size={11} /> },
-    TERMINE:    { label: 'Terminé',     bg: 'rgba(22,163,74,0.1)',  color: '#16A34A', icon: <CheckCircle size={11} /> },
+    TERMINE:    { label: 'Terminé',     bg: 'rgba(22,163,74,0.1)',  color: '#2563EB', icon: <CheckCircle size={11} /> },
     REFUSE:     { label: 'Refusé',      bg: 'rgba(107,114,128,0.1)',color: '#6B7280', icon: <XCircle size={11} /> },
   }
   const s = map[statut] ?? { label: statut, bg: '#F3F4F6', color: '#6B7280', icon: null }
@@ -104,7 +104,7 @@ export default function MicroCreditsPage() {
       {msg && (
         <div className="px-4 py-3 rounded-xl text-sm font-medium"
           style={{ background: msg.type === 'ok' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)',
-                   color: msg.type === 'ok' ? '#16A34A' : '#DC2626' }}>
+                   color: msg.type === 'ok' ? '#2563EB' : '#DC2626' }}>
           {msg.text}
         </div>
       )}
@@ -163,7 +163,7 @@ export default function MicroCreditsPage() {
                     style={{ background: '#fff', border: '1px solid var(--border)' }} />
                   <button onClick={() => valider(c.id)} disabled={loadingId === c.id}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white disabled:opacity-50 shrink-0"
-                    style={{ background: '#16A34A' }}>
+                    style={{ background: '#2563EB' }}>
                     <CheckCircle size={15} /> Approuver
                   </button>
                   <button onClick={() => refuser(c.id)} disabled={loadingId === c.id}
@@ -234,7 +234,7 @@ export default function MicroCreditsPage() {
                 {/* Barre de progression remboursement */}
                 <div className="mb-3">
                   <div className="flex justify-between text-xs mb-1.5" style={{ color: 'var(--muted)' }}>
-                    <span>Remboursé : <strong style={{ color: c.statut === 'EN_DEFAUT' ? '#DC2626' : '#16A34A' }}>
+                    <span>Remboursé : <strong style={{ color: c.statut === 'EN_DEFAUT' ? '#DC2626' : '#2563EB' }}>
                       {fmt(c.montantRembourse)} FCFA
                     </strong></span>
                     <span><strong>{c.progressionPct}%</strong></span>
@@ -284,8 +284,8 @@ export default function MicroCreditsPage() {
                 {c.statut === 'TERMINE' && (
                   <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl"
                     style={{ background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.2)' }}>
-                    <CheckCircle size={15} style={{ color: '#16A34A', flexShrink: 0 }} />
-                    <p className="text-xs font-medium" style={{ color: '#16A34A' }}>
+                    <CheckCircle size={15} style={{ color: '#2563EB', flexShrink: 0 }} />
+                    <p className="text-xs font-medium" style={{ color: '#2563EB' }}>
                       Crédit entièrement remboursé.
                     </p>
                   </div>

@@ -19,13 +19,13 @@ type Tontine = {
 }
 
 const TYPE = {
-  PERSONNELLE: { label: 'Personnelle', c: '#16A34A', bg: 'rgba(22,163,74,0.12)' },
+  PERSONNELLE: { label: 'Personnelle', c: '#2563EB', bg: 'rgba(22,163,74,0.12)' },
   GROUPE:      { label: 'Groupe',      c: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
   PROJET:      { label: 'Projet',      c: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
 }
 const STATUT = {
   CREATION:  { label: 'En création', c: '#F59E0B', bg: 'rgba(245,158,11,0.12)',  icon: AlertTriangle },
-  ACTIVE:    { label: 'Active',      c: '#16A34A', bg: 'rgba(22,163,74,0.12)',   icon: CheckCircle2 },
+  ACTIVE:    { label: 'Active',      c: '#2563EB', bg: 'rgba(22,163,74,0.12)',   icon: CheckCircle2 },
   SUSPENDUE: { label: 'Suspendue',   c: '#EF4444', bg: 'rgba(239,68,68,0.12)',   icon: Pause },
   TERMINEE:  { label: 'Terminée',    c: '#6B7280', bg: 'rgba(107,114,128,0.12)', icon: CheckCircle2 },
 }
@@ -95,7 +95,7 @@ export default function TontinesPage() {
     <div className="space-y-6">
       {toast && (
         <div className="fixed top-5 right-5 z-50 px-5 py-3.5 rounded-2xl text-sm font-semibold shadow-xl flex items-center gap-2"
-          style={{ background: toast.type === 'ok' ? '#16A34A' : '#EF4444', color: '#fff' }}>
+          style={{ background: toast.type === 'ok' ? '#2563EB' : '#EF4444', color: '#fff' }}>
           <CheckCircle2 size={16} />{toast.text}
         </div>
       )}
@@ -106,13 +106,13 @@ export default function TontinesPage() {
           <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>{total} tontine(s) sur la plateforme</p>
         </div>
         <button onClick={() => mutate()} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-          style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
+          style={{ background: '#EFF4FF', color: '#2563EB', border: '1px solid #BFDBFE' }}>
           <RefreshCw size={14} />Actualiser
         </button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiPremium titre="Total" valeur={total} couleur="#16A34A" Icon={Coins} sousTitre="Toutes confondues" />
+        <KpiPremium titre="Total" valeur={total} couleur="#2563EB" Icon={Coins} sousTitre="Toutes confondues" />
         <KpiPremium titre="Actives" valeur={tontines.filter(t => t.statut === 'ACTIVE').length} couleur="#3B82F6" Icon={Play} sousTitre="En cours" />
         <KpiPremium titre="Volume caisse" valeur={fmt(tontines.reduce((s, t) => s + t.soldeActuelFcfa, 0)) + ' F'} couleur="#8B5CF6" Icon={Banknote} sousTitre="Soldes cumulés" />
         <KpiPremium titre="Transactions" valeur={tontines.reduce((s, t) => s + t._count.transactions, 0)} couleur="#F59E0B" Icon={TrendingUp} sousTitre="Ce chargement" />
@@ -217,7 +217,7 @@ export default function TontinesPage() {
                   {t.statut === 'SUSPENDUE' && (
                     <button onClick={() => doAction(t.id, 'reactiver', 'Réactivation')} disabled={actionLoading === t.id + 'reactiver'}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 justify-center"
-                      style={{ background: 'rgba(22,163,74,0.1)', color: '#16A34A', border: '1px solid rgba(22,163,74,0.25)' }}>
+                      style={{ background: 'rgba(22,163,74,0.1)', color: '#2563EB', border: '1px solid rgba(22,163,74,0.25)' }}>
                       <Play size={12} />{actionLoading === t.id + 'reactiver' ? '...' : 'Réactiver'}
                     </button>
                   )}
@@ -251,7 +251,7 @@ export default function TontinesPage() {
               style={{ background: '#F1F5F9', color: '#0F172A' }}>← Précédent</button>
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
               className="px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-40"
-              style={{ background: '#16A34A', color: '#fff' }}>Suivant →</button>
+              style={{ background: '#2563EB', color: '#fff' }}>Suivant →</button>
           </div>
         </div>
       )}

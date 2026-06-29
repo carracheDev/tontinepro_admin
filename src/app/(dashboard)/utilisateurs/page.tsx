@@ -15,7 +15,7 @@ type Utilisateur = {
 }
 
 const ROLE_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  CLIENT:      { label: 'Client',      color: '#16A34A', bg: 'rgba(22,163,74,0.1)'    },
+  CLIENT:      { label: 'Client',      color: '#2563EB', bg: 'rgba(22,163,74,0.1)'    },
   AGENT:       { label: 'Agent',       color: '#3B82F6', bg: 'rgba(59,130,246,0.1)'   },
   INDEPENDANT: { label: 'Indép.',      color: '#F59E0B', bg: 'rgba(245,158,11,0.1)'   },
   SUPERVISEUR: { label: 'Superviseur', color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)'   },
@@ -23,7 +23,7 @@ const ROLE_STYLE: Record<string, { label: string; color: string; bg: string }> =
 }
 
 function scoreColor(s: number) {
-  if (s >= 75) return '#16A34A'
+  if (s >= 75) return '#2563EB'
   if (s >= 60) return '#3B82F6'
   if (s >= 40) return '#F59E0B'
   return '#EF4444'
@@ -85,9 +85,9 @@ export default function UtilisateursPage() {
             <button key={v} onClick={() => setFiltreRole(v)}
               className="px-3 py-2 rounded-xl text-xs font-bold transition-all"
               style={{
-                background: filtreRole === v ? '#16A34A' : '#fff',
+                background: filtreRole === v ? '#2563EB' : '#fff',
                 color: filtreRole === v ? '#fff' : 'var(--muted)',
-                border: `1px solid ${filtreRole === v ? '#16A34A' : 'var(--border)'}`,
+                border: `1px solid ${filtreRole === v ? '#2563EB' : 'var(--border)'}`,
                 boxShadow: filtreRole === v ? '0 2px 8px rgba(22,163,74,0.3)' : 'none',
               }}>
               {l}
@@ -101,7 +101,7 @@ export default function UtilisateursPage() {
         <div className="px-4 py-3 rounded-xl text-sm font-semibold"
           style={{
             background: msg.type === 'ok' ? 'rgba(22,163,74,0.08)' : 'rgba(239,68,68,0.08)',
-            color: msg.type === 'ok' ? '#16A34A' : '#EF4444',
+            color: msg.type === 'ok' ? '#2563EB' : '#EF4444',
             border: `1px solid ${msg.type === 'ok' ? 'rgba(22,163,74,0.2)' : 'rgba(239,68,68,0.2)'}`,
           }}>
           {msg.text}
@@ -122,7 +122,7 @@ export default function UtilisateursPage() {
         <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: 'var(--border)' }}>
           <div className="w-8 h-8 rounded-xl flex items-center justify-center"
             style={{ background: 'rgba(22,163,74,0.1)' }}>
-            <Users size={16} style={{ color: '#16A34A' }} />
+            <Users size={16} style={{ color: '#2563EB' }} />
           </div>
           <div>
             <h2 className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>
@@ -163,7 +163,7 @@ export default function UtilisateursPage() {
                       <div className="flex items-center gap-3">
                         <div
                           className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0"
-                          style={{ background: `linear-gradient(135deg, #16A34A, #14532D)` }}
+                          style={{ background: `linear-gradient(135deg, #2563EB, #1E3A8A)` }}
                         >
                           {u.nom?.charAt(0)?.toUpperCase()}
                         </div>
@@ -190,9 +190,9 @@ export default function UtilisateursPage() {
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full"
-                          style={{ background: u.statut === 'ACTIF' ? '#16A34A' : '#EF4444' }} />
+                          style={{ background: u.statut === 'ACTIF' ? '#2563EB' : '#EF4444' }} />
                         <span className="text-xs font-semibold"
-                          style={{ color: u.statut === 'ACTIF' ? '#16A34A' : '#EF4444' }}>
+                          style={{ color: u.statut === 'ACTIF' ? '#2563EB' : '#EF4444' }}>
                           {u.statut}
                         </span>
                       </div>
@@ -216,7 +216,7 @@ export default function UtilisateursPage() {
                     {/* KYC */}
                     <td className="px-5 py-3.5">
                       {u.kycVerifie ? (
-                        <div className="flex items-center gap-1 text-xs font-bold" style={{ color: '#16A34A' }}>
+                        <div className="flex items-center gap-1 text-xs font-bold" style={{ color: '#2563EB' }}>
                           <ShieldCheck size={14} /> Vérifié
                         </div>
                       ) : (
@@ -240,7 +240,7 @@ export default function UtilisateursPage() {
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:opacity-80 disabled:opacity-40"
                           style={{
                             background: u.statut === 'ACTIF' ? 'rgba(239,68,68,0.08)' : 'rgba(22,163,74,0.08)',
-                            color: u.statut === 'ACTIF' ? '#EF4444' : '#16A34A',
+                            color: u.statut === 'ACTIF' ? '#EF4444' : '#2563EB',
                             border: `1px solid ${u.statut === 'ACTIF' ? 'rgba(239,68,68,0.2)' : 'rgba(22,163,74,0.2)'}`,
                           }}
                         >
@@ -248,7 +248,7 @@ export default function UtilisateursPage() {
                           {u.statut === 'ACTIF' ? 'Suspendre' : 'Réactiver'}
                         </button>
                         <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ color: '#16A34A' }} />
+                          style={{ color: '#2563EB' }} />
                       </div>
                     </td>
                   </tr>

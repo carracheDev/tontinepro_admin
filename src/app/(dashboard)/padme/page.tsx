@@ -31,7 +31,7 @@ const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; 
   GENERE:       { label: 'Généré',          color: '#6B7280', bg: '#F3F4F6',                   icon: FileText },
   VALIDE_ADMIN: { label: 'Validé admin',    color: '#1A56DB', bg: 'rgba(26,86,219,0.1)',        icon: CheckCircle2 },
   SOUMIS_PADME: { label: 'Soumis PADME',   color: '#D97706', bg: 'rgba(217,119,6,0.1)',         icon: Send },
-  ACCEPTE:      { label: 'Accepté ✓',      color: '#16A34A', bg: 'rgba(22,163,74,0.1)',         icon: CheckCircle2 },
+  ACCEPTE:      { label: 'Accepté ✓',      color: '#2563EB', bg: 'rgba(22,163,74,0.1)',         icon: CheckCircle2 },
   REJETE:       { label: 'Rejeté',          color: '#DC2626', bg: 'rgba(220,38,38,0.1)',         icon: XCircle },
 }
 
@@ -39,7 +39,7 @@ const FUNNEL_STEPS = [
   { key: 'GENERE',       label: 'Générés',       color: '#9CA3AF' },
   { key: 'VALIDE_ADMIN', label: 'Validés admin', color: '#1A56DB' },
   { key: 'SOUMIS_PADME', label: 'Soumis PADME',  color: '#D97706' },
-  { key: 'ACCEPTE',      label: 'Acceptés',      color: '#16A34A' },
+  { key: 'ACCEPTE',      label: 'Acceptés',      color: '#2563EB' },
   { key: 'REJETE',       label: 'Rejetés',       color: '#DC2626' },
 ]
 
@@ -191,7 +191,7 @@ export default function PadmePage() {
                   formatter={(v, n) => [v, n === 'eligiblesPADME' ? 'Éligibles PADME' : 'Score moyen']} />
                 <Bar dataKey="eligiblesPADME" name="Éligibles PADME" radius={[4, 4, 0, 0]}>
                   {zonesListe.map((z, i) => (
-                    <Cell key={i} fill={z.eligiblesPADME === maxZone ? '#16A34A' : '#BBF7D0'} />
+                    <Cell key={i} fill={z.eligiblesPADME === maxZone ? '#2563EB' : '#BFDBFE'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -259,7 +259,7 @@ export default function PadmePage() {
                         <BarChart2 size={13} style={{ color: 'var(--muted)' }} />
                         <span className="text-xs" style={{ color: 'var(--muted)' }}>Score</span>
                         <span className="text-xs font-black" style={{
-                          color: d.scoreAuMoment >= 80 ? '#16A34A' : d.scoreAuMoment >= 70 ? '#1A56DB' : '#D97706'
+                          color: d.scoreAuMoment >= 80 ? '#2563EB' : d.scoreAuMoment >= 70 ? '#1A56DB' : '#D97706'
                         }}>
                           {d.scoreAuMoment}/100
                         </span>
@@ -268,7 +268,7 @@ export default function PadmePage() {
                       {/* Montant souhaité */}
                       {d.montantSouhaite != null && (
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(22,163,74,0.07)' }}>
-                          <span className="text-xs font-bold" style={{ color: '#16A34A' }}>
+                          <span className="text-xs font-bold" style={{ color: '#2563EB' }}>
                             {d.montantSouhaite.toLocaleString('fr-FR')} FCFA demandés
                           </span>
                         </div>
@@ -310,7 +310,7 @@ export default function PadmePage() {
                       {d.statut === 'SOUMIS_PADME' && (<>
                         <button onClick={() => enregistrerResultat(d.id, 'ACCEPTE')} disabled={loadingId === d.id}
                           className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40 transition-opacity"
-                          style={{ background: '#16A34A' }}>
+                          style={{ background: '#2563EB' }}>
                           <CheckCircle2 size={13} /> Accepté par PADME
                         </button>
                         <button onClick={() => {

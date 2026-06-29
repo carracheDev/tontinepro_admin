@@ -7,8 +7,18 @@ export interface AdminUser {
   role: string
 }
 
+function normaliserTelephoneBenin(telephone: string): string {
+  const valeur = telephone.trim().replace(/\s+/g, '')
+  if (valeur.startsWith('+')) return valeur
+  if (valeur.startsWith('229')) return `+${valeur}`
+  return `+229${valeur}`
+}
+
 export async function login(telephone: string, pin: string): Promise<string> {
-  const res = await api.post('/auth/connexion', { telephone, pin })
+  const res = await api.post('/auth/connexion', {
+    telephone: normaliserTelephoneBenin(telephone),
+    pin,
+  })
   const token = res.data?.donnees?.accessToken
   if (!token) throw new Error('Token manquant dans la réponse')
   localStorage.setItem('admin_token', token)

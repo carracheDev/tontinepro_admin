@@ -92,7 +92,7 @@ function StatBox({ label, value, color = 'var(--foreground)' }: { label: string;
 // ─── Statut KYC document ─────────────────────────────────────────────────────
 
 const KYC_STATUT = {
-  VALIDE:     { icon: CheckCircle2, color: '#16A34A', bg: 'rgba(22,163,74,0.1)',  label: 'Validé'     },
+  VALIDE:     { icon: CheckCircle2, color: '#2563EB', bg: 'rgba(22,163,74,0.1)',  label: 'Validé'     },
   EN_ATTENTE: { icon: Clock,        color: '#D97706', bg: 'rgba(217,119,6,0.1)',  label: 'En attente' },
   REJETE:     { icon: XCircle,      color: '#DC2626', bg: 'rgba(220,38,38,0.1)',  label: 'Rejeté'     },
 }
@@ -167,7 +167,7 @@ function DocKycCard({ doc, onValider, onRejeter }: {
           <button
             onClick={onValider}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80"
-            style={{ background: '#16A34A', color: '#fff' }}
+            style={{ background: '#2563EB', color: '#fff' }}
           >
             <CheckCircle2 size={14} />
             Valider
@@ -283,7 +283,7 @@ export default function FicheClientPage() {
 
   // ── Score color ─────────────────────────────────────────────────────────────
   function scoreColor(s: number) {
-    if (s >= 75) return '#16A34A'
+    if (s >= 75) return '#2563EB'
     if (s >= 60) return '#1A56DB'
     if (s >= 40) return '#D97706'
     return '#DC2626'
@@ -348,7 +348,7 @@ export default function FicheClientPage() {
             {(() => {
               const s = client.statut
               const cfg: Record<string, { label: string; color: string; bg: string }> = {
-                ACTIF:      { label: '✓ Actif',        color: '#16A34A', bg: 'rgba(22,163,74,0.1)'   },
+                ACTIF:      { label: '✓ Actif',        color: '#2563EB', bg: 'rgba(22,163,74,0.1)'   },
                 SUSPENDU:   { label: '⛔ Suspendu',     color: '#F59E0B', bg: 'rgba(245,158,11,0.1)'  },
                 BLOQUE:     { label: '🔒 Bloqué',       color: '#DC2626', bg: 'rgba(220,38,38,0.1)'   },
                 EN_ATTENTE: { label: '⏳ En attente',   color: '#D97706', bg: 'rgba(217,119,6,0.1)'   },
@@ -358,7 +358,7 @@ export default function FicheClientPage() {
               return <Pill label={c.label} color={c.color} bg={c.bg} />
             })()}
             {client.kycVerifie && (
-              <Pill label="KYC ✓" color="#16A34A" bg="rgba(22,163,74,0.1)" />
+              <Pill label="KYC ✓" color="#2563EB" bg="rgba(22,163,74,0.1)" />
             )}
             {docEnAttente > 0 && (
               <Pill label={`${docEnAttente} KYC en attente`} color="#D97706" bg="rgba(217,119,6,0.1)" />
@@ -372,7 +372,7 @@ export default function FicheClientPage() {
             className="px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80 disabled:opacity-40 shrink-0"
             style={{
               background: client.statut === 'ACTIF' ? 'rgba(220,38,38,0.1)' : 'rgba(22,163,74,0.1)',
-              color: client.statut === 'ACTIF' ? '#DC2626' : '#16A34A',
+              color: client.statut === 'ACTIF' ? '#DC2626' : '#2563EB',
               border: `1px solid ${client.statut === 'ACTIF' ? 'rgba(220,38,38,0.3)' : 'rgba(22,163,74,0.3)'}`,
             }}
           >
@@ -441,7 +441,7 @@ export default function FicheClientPage() {
               <div className="flex flex-wrap gap-2">
                 <Pill label={`Régularité ${Math.round(score.tauxRegularite * 100)}%`} color="#1A56DB" bg="rgba(26,86,219,0.1)" />
                 {score.eligibleMicroCredit && <Pill label="Éligible crédit ✓" color="#7C3AED" bg="rgba(124,58,237,0.1)" />}
-                {score.eligiblePADME      && <Pill label="Éligible PADME ✓"  color="#16A34A" bg="rgba(22,163,74,0.1)" />}
+                {score.eligiblePADME      && <Pill label="Éligible PADME ✓"  color="#2563EB" bg="rgba(22,163,74,0.1)" />}
                 {score.badges?.[0]        && <Pill label={`${score.badges[0].niveau}`} color="#D97706" bg="rgba(217,119,6,0.1)" />}
               </div>
             </div>
@@ -455,7 +455,7 @@ export default function FicheClientPage() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           {client.kycVerifie
-            ? <ShieldCheck size={16} style={{ color: '#16A34A' }} />
+            ? <ShieldCheck size={16} style={{ color: '#2563EB' }} />
             : <ShieldAlert size={16} style={{ color: '#D97706' }} />
           }
           <SectionTitle>
@@ -497,7 +497,7 @@ export default function FicheClientPage() {
           : (
           <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
             {client.tontines.map((t, i) => {
-              const stColor = { ACTIVE: '#16A34A', SUSPENDUE: '#D97706', TERMINEE: '#9CA3AF', CREATION: '#1A56DB' }[t.statut] ?? '#9CA3AF'
+              const stColor = { ACTIVE: '#2563EB', SUSPENDUE: '#D97706', TERMINEE: '#9CA3AF', CREATION: '#1A56DB' }[t.statut] ?? '#9CA3AF'
               return (
                 <div key={t.id} className="flex items-center gap-3 px-5 py-3.5 border-b last:border-0"
                   style={{ borderColor: '#E2E8F0' }}>
@@ -540,13 +540,13 @@ export default function FicheClientPage() {
                   {client.transactions.map(tx => (
                     <tr key={tx.id} style={{ borderBottom: '1px solid #E2E8F0' }}>
                       <td className="px-5 py-3 text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{tx.type}</td>
-                      <td className="px-5 py-3 text-sm font-black" style={{ color: tx.type === 'RETRAIT' ? '#DC2626' : '#16A34A', fontVariantNumeric: 'tabular-nums' }}>
+                      <td className="px-5 py-3 text-sm font-black" style={{ color: tx.type === 'RETRAIT' ? '#DC2626' : '#2563EB', fontVariantNumeric: 'tabular-nums' }}>
                         {fmtFcfa(tx.montantFcfa)}
                       </td>
                       <td className="px-5 py-3 text-sm" style={{ color: 'var(--muted)' }}>{tx.operateur}</td>
                       <td className="px-5 py-3">
                         <span className="text-xs font-bold px-2 py-1 rounded-full"
-                          style={{ background: tx.statut === 'SUCCES' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)', color: tx.statut === 'SUCCES' ? '#16A34A' : '#DC2626' }}>
+                          style={{ background: tx.statut === 'SUCCES' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)', color: tx.statut === 'SUCCES' ? '#2563EB' : '#DC2626' }}>
                           {tx.statut}
                         </span>
                       </td>
@@ -569,7 +569,7 @@ export default function FicheClientPage() {
               const progress = c.montantPrincipalFcfa > 0
                 ? (1 - c.montantRestantFcfa / c.montantPrincipalFcfa)
                 : 0
-              const stColor = { ACTIF: '#7C3AED', TERMINE: '#16A34A', EN_DEFAUT: '#DC2626', EN_ATTENTE: '#D97706', REFUSE: '#9CA3AF' }[c.statut] ?? '#9CA3AF'
+              const stColor = { ACTIF: '#7C3AED', TERMINE: '#2563EB', EN_DEFAUT: '#DC2626', EN_ATTENTE: '#D97706', REFUSE: '#9CA3AF' }[c.statut] ?? '#9CA3AF'
               return (
                 <Card key={c.id} className="space-y-3">
                   <div className="flex items-center justify-between">

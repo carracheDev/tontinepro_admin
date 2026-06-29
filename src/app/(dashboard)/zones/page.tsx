@@ -14,7 +14,7 @@ type Zone = {
 }
 
 function scoreColor(s: number) {
-  if (s >= 75) return '#16A34A'
+  if (s >= 75) return '#2563EB'
   if (s >= 60) return '#1A56DB'
   if (s >= 40) return '#D97706'
   return '#DC2626'
@@ -46,7 +46,7 @@ export default function ZonesPage() {
       {/* Meilleure zone */}
       {meilleurZone && (
         <div className="rounded-2xl p-5 flex items-center gap-4"
-          style={{ background: 'var(--primary-light)', border: '1px solid #BBF7D0' }}>
+          style={{ background: 'var(--primary-light)', border: '1px solid #BFDBFE' }}>
           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
             style={{ background: 'rgba(22,163,74,0.15)' }}>🏆</div>
           <div>
@@ -79,7 +79,7 @@ export default function ZonesPage() {
                 formatter={(v) => [v, 'Clients']} />
               <Bar dataKey="nbClients" name="Clients" radius={[4, 4, 0, 0]}>
                 {sortedByClients.map((_, i) => (
-                  <Cell key={i} fill={i === 0 ? '#16A34A' : '#BBF7D0'} />
+                  <Cell key={i} fill={i === 0 ? '#2563EB' : '#BFDBFE'} />
                 ))}
               </Bar>
             </BarChart>
@@ -149,7 +149,7 @@ export default function ZonesPage() {
                     <td className="px-5 py-3.5 font-bold text-sm" style={{ color: 'var(--primary)' }}>{z.eligiblesPADME}</td>
                     <td className="px-5 py-3.5">
                       <span className="text-xs font-bold px-2 py-1 rounded-full"
-                        style={{ background: couverture >= 30 ? 'rgba(22,163,74,0.1)' : 'rgba(217,119,6,0.1)', color: couverture >= 30 ? '#16A34A' : '#D97706' }}>
+                        style={{ background: couverture >= 30 ? 'rgba(22,163,74,0.1)' : 'rgba(217,119,6,0.1)', color: couverture >= 30 ? '#2563EB' : '#D97706' }}>
                         {couverture}%
                       </span>
                     </td>
