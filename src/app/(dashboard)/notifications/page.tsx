@@ -6,9 +6,10 @@ import { Bell, Send } from 'lucide-react'
 
 const TYPES = ['INFO', 'ALERTE', 'SUCCES', 'PROMOTION']
 const CIBLES = [
-  { value: 'TOUS',        label: 'Tous les utilisateurs' },
-  { value: 'CLIENTS',     label: 'Clients uniquement' },
-  { value: 'COLLECTEURS', label: 'Collecteurs uniquement' },
+  { value: 'TOUS',        label: 'Tout le monde' },
+  { value: 'CLIENTS',     label: 'Tous les clients' },
+  { value: 'COLLECTEURS', label: 'Tous les collecteurs' },
+  { value: 'UNIQUE',      label: 'Un utilisateur précis' },
 ]
 
 export default function NotificationsPage() {
@@ -16,16 +17,20 @@ export default function NotificationsPage() {
   const [message, setMessage] = useState('')
   const [type, setType] = useState('INFO')
   const [cible, setCible] = useState('TOUS')
+  const [destinataireTelephone, setDestinataireTelephone] = useState('')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   async function envoyer() {
     if (!titre.trim() || !message.trim()) return
+    if (cible === 'UNIQUE' && !destinataireTelephone.trim()) {
+      setMsg({ type: 'err', text: 'Indique le numéro du destinataire.' }); return
+    }
     setLoading(true)
     setMsg(null)
     try {
-      await api.post('/notifications/diffuser', { titre, message, type, cible })
-      setMsg({ type: 'ok', text: `Notification envoyée à ${cible === 'TOUS' ? 'tous les utilisateurs' : cible.toLowerCase()} ✓` })
+      const r = await api.post('/notifications/diffuser', { titre, message, type, cible, destinataireTelephone })
+      setMsg({ type: 'ok', text: r.data?.message ?? 'Notification envoyée ✓' })
       setTitre('')
       setMessage('')
     } catch (err) {
@@ -64,6 +69,20 @@ export default function NotificationsPage() {
             ))}
           </div>
         </div>
+
+        {/* Destinataire précis (par téléphone) */}
+        {cible === 'UNIQUE' && (
+          <div>
+            <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Numéro du destinataire (client ou collecteur)</label>
+            <input
+              value={destinataireTelephone}
+              onChange={e => setDestinataireTelephone(e.target.value)}
+              placeholder="Ex: +2290100000000"
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+              style={{ background: '#fff', border: '1px solid var(--border)' }}
+            />
+          </div>
+        )}
 
         {/* Type */}
         <div>
