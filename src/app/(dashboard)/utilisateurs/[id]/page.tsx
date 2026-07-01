@@ -4,603 +4,255 @@ import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { api, extraireErreur } from '@/lib/api'
+import { COLORS } from '@/lib/colors'
 import {
-  ArrowLeft, Shield, ShieldCheck, ShieldX, ShieldAlert,
-  Star, Wallet, CreditCard, ReceiptText,
-  CheckCircle2, XCircle, Clock, BadgeCheck,
-  User, Phone, Calendar, Award,
+  ArrowLeft, Phone, Calendar, ShieldCheck, ShieldX, Fingerprint,
+  Wallet, PiggyBank, ArrowDownToLine, CreditCard, RotateCcw, Coins,
+  CheckCircle2, AlertTriangle, Info, Ban, Play, Bell, KeyRound, FileCheck2,
+  Smartphone, Globe, ScrollText, MessageSquareWarning, Layers, Award,
 } from 'lucide-react'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────
+const fetcher = (url: string) => api.get(url).then((r) => r.data?.donnees ?? r.data)
+const fcfa = (n: number) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' F'
+const dateF = (d?: string) => (d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')
+const dateT = (d?: string) => (d ? new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—')
+const initials = (nom: string) => (nom || '?').split(' ').map((m) => m[0]).slice(0, 2).join('').toUpperCase()
 
-const fetcher = (url: string) => api.get(url).then(r => r.data?.donnees ?? r.data)
-
-function fmt(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}K`
-  return `${n}`
-}
-function fmtFcfa(n: number) { return fmt(n) + ' FCFA' }
-function fmtDate(d: string)  {
-  return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type DocKyc = {
-  id: string
-  typeDocument: string
-  statut: 'EN_ATTENTE' | 'VALIDE' | 'REJETE'
-  motifRejet?: string
-  cheminFichier?: string
-  creeLe: string
-}
-
-type FicheClient = {
-  id: string; nom: string; telephone: string; role: string
-  statut: string; kycVerifie: boolean; creeLe: string
-  scoreCredit?: {
-    score: number; tauxRegularite: number
-    eligibleMicroCredit: boolean; eligiblePADME: boolean
-    badges?: { niveau: string }[]
-  }
-  documentsKYC: DocKyc[]
-  tontines: { id: string; nom: string; emoji: string; type: string; statut: string; soldeActuelFcfa: number }[]
-  transactions: { id: string; type: string; montantFcfa: number; statut: string; operateur: string; creeLe: string }[]
-  microCredits: { id: string; montantPrincipalFcfa: number; montantRestantFcfa: number; statut: string; dateEcheance?: string }[]
-  collecteur?: { nom: string; telephone: string }
-  soldeTotal: number
-  volumeCotisations: number
-  _count: { tontines: number; transactions: number; microCredits: number; retraits: number }
+type Analyse = { ton: 'positif' | 'neutre' | 'alerte'; texte: string }
+type Dossier = {
+  profil: { id: string; nom: string; telephone: string; photo?: string | null; role: string; statut: string; kycVerifie: boolean; empreinteActive: boolean; tentativesEchouees: number; creeLe: string; ancienneteMois: number; collecteur?: { nom: string } | null; zone?: { nom: string; ville: string } | null }
+  scores: { credit: number; fidelite: number; risque: number }
+  financier: { soldeEpargne: number; soldeDisponible: number; totalCotise: number; totalRetire: number; encoursCredit: number; totalRembourse: number }
+  analyse: Analyse[]
+  badges: { niveau: string; obtenuLe: string }[]
+  documentsKYC: { id: string; typeDocument: string; statut: string; creeLe: string; motifRejet?: string | null }[]
+  tontines: { id: string; nom: string; type: string; statut: string; soldeActuelFcfa: number }[]
+  transactions: { id: string; type: string; montantFcfa: number; statut: string; creeLe: string }[]
+  microCredits: { id: string; montantPrincipalFcfa: number; montantRestantFcfa: number; statut: string; creeLe: string }[]
+  retraits: { id: string; montantFcfa: number; statut: string; creeLe: string }[]
+  litiges: { id: string; categorie: string; motif: string; statut: string; creeLe: string }[]
+  sessions: { id: string; adresseIP?: string | null; userAgent?: string | null; actif: boolean; derniereUtilisation: string }[]
+  appareils: { id: string; nomAppareil?: string | null; modeleAppareil?: string | null; systemeExploitation?: string | null; actif: boolean; derniereAuthentification?: string | null }[]
+  journal: { action: string; details: string; adresseIP?: string | null; creeLe: string }[]
+  compteurs: { tontines: number; transactions: number; microCredits: number; retraits: number }
 }
 
-// ─── Composants utilitaires ───────────────────────────────────────────────────
-
-function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+// ─── Sous-composants ────────────────────────────────────────────────────
+function Ring({ value, label, color }: { value: number; label: string; color: string }) {
+  const r = 26, c = 2 * Math.PI * r
   return (
-    <div className={`rounded-2xl p-5 ${className}`} style={{ background: '#fff', border: '1px solid var(--border)' }}>
-      {children}
-    </div>
-  )
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--muted)' }}>
-      {children}
-    </h2>
-  )
-}
-
-function Pill({ label, color, bg }: { label: string; color: string; bg: string }) {
-  return (
-    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ color, background: bg }}>
-      {label}
-    </span>
-  )
-}
-
-function StatBox({ label, value, color = 'var(--foreground)' }: { label: string; value: string | number; color?: string }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-lg font-black" style={{ color, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
-      <span className="text-xs" style={{ color: 'var(--muted)' }}>{label}</span>
-    </div>
-  )
-}
-
-// ─── Statut KYC document ─────────────────────────────────────────────────────
-
-const KYC_STATUT = {
-  VALIDE:     { icon: CheckCircle2, color: '#2563EB', bg: 'rgba(22,163,74,0.1)',  label: 'Validé'     },
-  EN_ATTENTE: { icon: Clock,        color: '#D97706', bg: 'rgba(217,119,6,0.1)',  label: 'En attente' },
-  REJETE:     { icon: XCircle,      color: '#DC2626', bg: 'rgba(220,38,38,0.1)',  label: 'Rejeté'     },
-}
-
-const TYPE_LABEL: Record<string, string> = {
-  CNI: 'Carte CIP (CNI)', PASSEPORT: 'Passeport',
-  PERMIS: 'Permis de conduire', ACTE_NAISSANCE: 'Acte de naissance',
-}
-
-// ─── Carte document KYC ───────────────────────────────────────────────────────
-
-function DocKycCard({ doc, onValider, onRejeter }: {
-  doc: DocKyc
-  onValider: () => void
-  onRejeter: () => void
-}) {
-  const st = KYC_STATUT[doc.statut] ?? KYC_STATUT.EN_ATTENTE
-  const Icon = st.icon
-
-  return (
-    <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${st.color}30`, background: '#FAFAFA' }}>
-      <div className="flex items-center gap-3 p-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: st.bg }}>
-          <Icon size={20} style={{ color: st.color }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>
-            {TYPE_LABEL[doc.typeDocument] ?? doc.typeDocument}
-          </p>
-          <p className="text-xs" style={{ color: 'var(--muted)' }}>
-            Soumis le {fmtDate(doc.creeLe)}
-          </p>
-        </div>
-        <Pill label={st.label} color={st.color} bg={st.bg} />
+    <div className="flex flex-col items-center gap-1">
+      <div className="relative" style={{ width: 66, height: 66 }}>
+        <svg width="66" height="66" className="-rotate-90">
+          <circle cx="33" cy="33" r={r} fill="none" stroke="#EAECEF" strokeWidth="6" />
+          <circle cx="33" cy="33" r={r} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round"
+            strokeDasharray={c} strokeDashoffset={c - (Math.max(0, Math.min(100, value)) / 100) * c} />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center text-lg font-black" style={{ color }}>{value}</div>
       </div>
-
-      {/* Motif rejet */}
-      {doc.statut === 'REJETE' && doc.motifRejet && (
-        <div className="px-4 pb-3">
-          <p className="text-xs italic" style={{ color: '#DC2626' }}>
-            Motif : {doc.motifRejet}
-          </p>
-        </div>
-      )}
-
-      {/* Lien vers le document */}
-      {doc.cheminFichier && (
-        <div className="px-4 pb-3">
-          <a
-            href={doc.cheminFichier}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs font-semibold underline"
-            style={{ color: 'var(--primary)' }}
-          >
-            Voir le document →
-          </a>
-        </div>
-      )}
-
-      {/* Boutons action — seulement EN_ATTENTE */}
-      {doc.statut === 'EN_ATTENTE' && (
-        <div className="flex gap-2 px-4 pb-4">
-          <button
-            onClick={onRejeter}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80"
-            style={{ background: 'rgba(220,38,38,0.1)', color: '#DC2626', border: '1px solid rgba(220,38,38,0.3)' }}
-          >
-            <XCircle size={14} />
-            Rejeter
-          </button>
-          <button
-            onClick={onValider}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80"
-            style={{ background: '#2563EB', color: '#fff' }}
-          >
-            <CheckCircle2 size={14} />
-            Valider
-          </button>
-        </div>
-      )}
+      <span className="text-[11px] font-semibold text-gray-500">{label}</span>
     </div>
   )
 }
 
-// ─── Modal rejet ──────────────────────────────────────────────────────────────
-
-function ModalRejet({ onClose, onConfirm }: { onClose: () => void; onConfirm: (motif: string) => void }) {
-  const [motif, setMotif] = useState('')
+function Stat({ icon: Icon, label, value, color }: { icon: any; label: string; value: string; color: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: '#fff' }}>
-        <h3 className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
-          Motif de rejet
-        </h3>
-        <p className="text-sm" style={{ color: 'var(--muted)' }}>
-          Le client recevra une notification <strong>FCM</strong>, <strong>SMS</strong> et <strong>in-app</strong> avec ce motif.
-        </p>
-        <textarea
-          value={motif}
-          onChange={e => setMotif(e.target.value)}
-          rows={3}
-          placeholder="Ex : Document illisible, photo floue, document expiré..."
-          className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
-          style={{ border: '1.5px solid var(--border)', color: 'var(--foreground)' }}
-        />
-        <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-            style={{ background: '#F3F4F6', color: 'var(--muted)' }}>
-            Annuler
-          </button>
-          <button
-            onClick={() => motif.trim() && onConfirm(motif.trim())}
-            disabled={!motif.trim()}
-            className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
-            style={{ background: '#DC2626', color: '#fff' }}
-          >
-            Confirmer le rejet
-          </button>
-        </div>
+    <div className="rounded-xl border bg-white p-3.5" style={{ borderColor: COLORS.border }}>
+      <div className="flex items-center gap-2 text-gray-500">
+        <Icon size={15} style={{ color }} />
+        <span className="text-[11px] font-semibold uppercase tracking-wide">{label}</span>
       </div>
+      <div className="mt-1.5 text-lg font-black tabular-nums" style={{ color: COLORS.text.primary }}>{value}</div>
     </div>
   )
 }
 
-// ─── Page principale ──────────────────────────────────────────────────────────
+function Badge({ text, color }: { text: string; color: string }) {
+  return <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold" style={{ background: COLORS.opacity(color, 0.12), color }}>{text}</span>
+}
 
-export default function FicheClientPage() {
+const statutColor = (s: string) => (s === 'ACTIF' ? COLORS.success : s === 'SUSPENDU' || s === 'BANNI' ? COLORS.danger : COLORS.warning)
+const txColor = (t: string) => (t === 'RETRAIT' || t === 'DISTRIBUTION_GROUPE' ? COLORS.danger : COLORS.primary)
+const etatColor = (s: string) => (['SUCCES', 'VALIDE', 'EXECUTE', 'VALIDE', 'TERMINE', 'RESOLU'].includes(s) ? COLORS.success : ['ECHOUE', 'REJETE', 'ECHEC', 'EN_DEFAUT'].includes(s) ? COLORS.danger : COLORS.warning)
+
+// ─── Page ───────────────────────────────────────────────────────────────
+export default function FicheClient360() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const [toast, setToast] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
-  const [rejetDocId, setRejetDocId] = useState<string | null>(null)
-  const [loading, setLoading] = useState<string | null>(null)
+  const { data, mutate, isLoading } = useSWR<Dossier>(id ? `/utilisateurs/${id}/dossier-360` : null, fetcher)
+  const [tab, setTab] = useState('apercu')
+  const [busy, setBusy] = useState(false)
+  const [toast, setToast] = useState<{ ok: boolean; t: string } | null>(null)
 
-  const { data: client, mutate, isLoading } = useSWR<FicheClient>(
-    `/utilisateurs/${id}`,
-    fetcher,
-  )
+  const notify = (ok: boolean, t: string) => { setToast({ ok, t }); setTimeout(() => setToast(null), 3200) }
 
-  function showToast(type: 'ok' | 'err', text: string) {
-    setToast({ type, text })
-    setTimeout(() => setToast(null), 4000)
-  }
-
-  async function validerDoc(docId: string) {
-    setLoading(docId)
+  async function changerStatut(statut: string) {
+    if (!confirm(`Confirmer : passer le compte en ${statut} ?`)) return
+    setBusy(true)
     try {
-      await api.put(`/kyc/${docId}/valider`)
-      showToast('ok', '✅ Document validé — notification FCM + SMS + in-app envoyée')
-      mutate()
-    } catch (err) {
-      showToast('err', extraireErreur(err))
-    } finally {
-      setLoading(null)
-    }
+      await api.put(`/utilisateurs/${id}/statut`, { statut })
+      await mutate()
+      notify(true, `Compte ${statut.toLowerCase()}.`)
+    } catch (e) { notify(false, extraireErreur(e)) } finally { setBusy(false) }
   }
 
-  async function rejeterDoc(docId: string, motif: string) {
-    setRejetDocId(null)
-    setLoading(docId)
-    try {
-      await api.put(`/kyc/${docId}/rejeter`, { motifRejet: motif })
-      showToast('err', '❌ Document rejeté — notification FCM + SMS + in-app envoyée')
-      mutate()
-    } catch (err) {
-      showToast('err', extraireErreur(err))
-    } finally {
-      setLoading(null)
-    }
-  }
+  if (isLoading) return <div className="p-10 text-center text-gray-400">Chargement du dossier…</div>
+  if (!data) return <div className="p-10 text-center text-gray-400">Client introuvable.</div>
 
-  async function toggleStatut() {
-    if (!client) return
-    setLoading('statut')
-    try {
-      const estActif = client.statut === 'ACTIF'
-      await api.put(`/utilisateurs/${id}/statut`, {
-        statut: estActif ? 'SUSPENDU' : 'ACTIF',
-      })
-      showToast('ok', `Compte ${estActif ? 'suspendu' : 'réactivé'} ✓`)
-      mutate()
-    } catch (err) {
-      showToast('err', extraireErreur(err))
-    } finally {
-      setLoading(null)
-    }
-  }
-
-  // ── Score color ─────────────────────────────────────────────────────────────
-  function scoreColor(s: number) {
-    if (s >= 75) return '#2563EB'
-    if (s >= 60) return '#1A56DB'
-    if (s >= 40) return '#D97706'
-    return '#DC2626'
-  }
-
-  if (isLoading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200" style={{ borderTopColor: 'var(--primary)' }} />
-    </div>
-  )
-
-  if (!client) return (
-    <div className="flex flex-col items-center justify-center h-64 gap-3">
-      <ShieldX size={40} style={{ color: 'var(--muted)' }} />
-      <p style={{ color: 'var(--muted)' }}>Client introuvable</p>
-    </div>
-  )
-
-  const score = client.scoreCredit
-  const docEnAttente = client.documentsKYC.filter(d => d.statut === 'EN_ATTENTE').length
+  const { profil: p, scores, financier: f, analyse } = data
+  const tabs = [
+    { k: 'apercu', label: 'Aperçu', icon: Layers },
+    { k: 'financier', label: 'Financier', icon: Wallet },
+    { k: 'kyc', label: 'KYC', icon: FileCheck2 },
+    { k: 'securite', label: 'Sécurité', icon: ShieldCheck },
+    { k: 'litiges', label: `Litiges (${data.litiges.length})`, icon: MessageSquareWarning },
+    { k: 'activite', label: 'Activité', icon: ScrollText },
+  ]
 
   return (
-    <div className="space-y-6 max-w-350">
-
-      {/* ── Toast ────────────────────────────────────────────────────────────── */}
+    <div className="mx-auto max-w-6xl space-y-4 p-1">
       {toast && (
-        <div
-          className="fixed top-5 right-5 z-50 px-5 py-3.5 rounded-2xl text-sm font-semibold shadow-lg"
-          style={{
-            background: toast.type === 'ok' ? 'rgba(22,163,74,0.95)' : 'rgba(220,38,38,0.95)',
-            color: '#fff',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          {toast.text}
-        </div>
+        <div className="fixed right-5 top-5 z-50 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg"
+          style={{ background: toast.ok ? 'rgba(22,163,74,.96)' : 'rgba(220,38,38,.96)' }}>{toast.t}</div>
       )}
 
-      {/* ── Modal rejet ──────────────────────────────────────────────────────── */}
-      {rejetDocId && (
-        <ModalRejet
-          onClose={() => setRejetDocId(null)}
-          onConfirm={(motif) => rejeterDoc(rejetDocId, motif)}
-        />
-      )}
+      <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800">
+        <ArrowLeft size={16} /> Retour
+      </button>
 
-      {/* ── En-tête ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-start gap-4">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold shrink-0"
-          style={{ background: '#fff', border: '1px solid var(--border)', color: 'var(--muted)' }}
-        >
-          <ArrowLeft size={14} /> Retour
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-black" style={{ color: 'var(--foreground)' }}>
-            {client.nom}
-          </h1>
-          <div className="flex items-center gap-2 flex-wrap mt-1">
-            <span className="text-sm" style={{ color: 'var(--muted)' }}>{client.telephone}</span>
-            {(() => {
-              const s = client.statut
-              const cfg: Record<string, { label: string; color: string; bg: string }> = {
-                ACTIF:      { label: '✓ Actif',        color: '#2563EB', bg: 'rgba(22,163,74,0.1)'   },
-                SUSPENDU:   { label: '⛔ Suspendu',     color: '#F59E0B', bg: 'rgba(245,158,11,0.1)'  },
-                BLOQUE:     { label: '🔒 Bloqué',       color: '#DC2626', bg: 'rgba(220,38,38,0.1)'   },
-                EN_ATTENTE: { label: '⏳ En attente',   color: '#D97706', bg: 'rgba(217,119,6,0.1)'   },
-                INACTIF:    { label: 'Inactif',         color: '#6B7280', bg: 'rgba(107,114,128,0.1)' },
-              }
-              const c = cfg[s] ?? { label: s, color: '#6B7280', bg: 'rgba(107,114,128,0.1)' }
-              return <Pill label={c.label} color={c.color} bg={c.bg} />
-            })()}
-            {client.kycVerifie && (
-              <Pill label="KYC ✓" color="#2563EB" bg="rgba(22,163,74,0.1)" />
-            )}
-            {docEnAttente > 0 && (
-              <Pill label={`${docEnAttente} KYC en attente`} color="#D97706" bg="rgba(217,119,6,0.1)" />
-            )}
-          </div>
-        </div>
-        {client.statut !== 'TERMINEE' && client.statut !== 'INACTIF' && (
-          <button
-            onClick={toggleStatut}
-            disabled={loading === 'statut'}
-            className="px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80 disabled:opacity-40 shrink-0"
-            style={{
-              background: client.statut === 'ACTIF' ? 'rgba(220,38,38,0.1)' : 'rgba(22,163,74,0.1)',
-              color: client.statut === 'ACTIF' ? '#DC2626' : '#2563EB',
-              border: `1px solid ${client.statut === 'ACTIF' ? 'rgba(220,38,38,0.3)' : 'rgba(22,163,74,0.3)'}`,
-            }}
-          >
-            {client.statut === 'ACTIF' ? '⛔ Suspendre' : '✅ Réactiver'}
-          </button>
-        )}
-      </div>
-
-      {/* ── Infos + Stats ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        {/* Infos de base */}
-        <Card>
-          <SectionTitle>Informations</SectionTitle>
-          <div className="space-y-3">
-            {[
-              { icon: User,     label: 'Nom',        value: client.nom },
-              { icon: Phone,    label: 'Téléphone',   value: client.telephone },
-              { icon: Calendar, label: 'Inscrit le',  value: fmtDate(client.creeLe) },
-              { icon: Award,    label: 'Collecteur',  value: client.collecteur?.nom ?? '—' },
-            ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: 'var(--primary-light)' }}>
-                  <Icon size={14} style={{ color: 'var(--primary)' }} />
-                </div>
-                <div>
-                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{label}</p>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{value}</p>
-                </div>
+      {/* EN-TÊTE */}
+      <div className="rounded-2xl border bg-white p-5" style={{ borderColor: COLORS.border }}>
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl text-xl font-black text-white"
+              style={{ background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryDark})` }}>
+              {initials(p.nom)}
+            </div>
+            <div>
+              <h1 className="text-xl font-black" style={{ color: COLORS.text.primary }}>{p.nom}</h1>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
+                <span className="flex items-center gap-1"><Phone size={13} /> {p.telephone}</span>
+                <span className="flex items-center gap-1"><Calendar size={13} /> depuis {p.ancienneteMois} mois</span>
+                {p.zone && <span>{p.zone.ville}</span>}
               </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Stats financières */}
-        <Card>
-          <SectionTitle>Activité financière</SectionTitle>
-          <div className="grid grid-cols-2 gap-4">
-            <StatBox label="Épargne totale"     value={fmtFcfa(client.soldeTotal)} color="var(--primary)" />
-            <StatBox label="Vol. cotisations"   value={fmtFcfa(client.volumeCotisations)} color="var(--primary)" />
-            <StatBox label="Tontines"           value={client._count.tontines} />
-            <StatBox label="Transactions"       value={client._count.transactions} />
-            <StatBox label="Micro-crédits"      value={client._count.microCredits} />
-            <StatBox label="Retraits"           value={client._count.retraits} />
-          </div>
-        </Card>
-
-        {/* Score crédit */}
-        <Card>
-          <SectionTitle>Score crédit</SectionTitle>
-          {score ? (
-            <div className="space-y-4">
-              <div className="flex items-end gap-2">
-                <span className="text-4xl font-black" style={{ color: scoreColor(score.score), fontVariantNumeric: 'tabular-nums' }}>
-                  {score.score}
-                </span>
-                <span className="text-lg font-bold mb-1" style={{ color: 'var(--muted)' }}>/100</span>
-              </div>
-              <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: '#F3F4F6' }}>
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${score.score}%`, background: scoreColor(score.score) }}
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Pill label={`Régularité ${Math.round(score.tauxRegularite * 100)}%`} color="#1A56DB" bg="rgba(26,86,219,0.1)" />
-                {score.eligibleMicroCredit && <Pill label="Éligible crédit ✓" color="#7C3AED" bg="rgba(124,58,237,0.1)" />}
-                {score.eligiblePADME      && <Pill label="Éligible PADME ✓"  color="#2563EB" bg="rgba(22,163,74,0.1)" />}
-                {score.badges?.[0]        && <Pill label={`${score.badges[0].niveau}`} color="#D97706" bg="rgba(217,119,6,0.1)" />}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <Badge text={p.statut} color={statutColor(p.statut)} />
+                <Badge text={p.kycVerifie ? 'KYC vérifié' : 'KYC non vérifié'} color={p.kycVerifie ? COLORS.success : COLORS.warning} />
+                <Badge text={p.role} color={COLORS.info} />
+                {p.empreinteActive && <Badge text="Biométrie" color={COLORS.primary} />}
+                {p.tentativesEchouees > 0 && <Badge text={`${p.tentativesEchouees} échecs PIN`} color={COLORS.danger} />}
               </div>
             </div>
+          </div>
+
+          {/* Scores */}
+          <div className="flex gap-5">
+            <Ring value={scores.credit} label="Crédit" color={COLORS.primary} />
+            <Ring value={scores.fidelite} label="Fidélité" color={COLORS.success} />
+            <Ring value={scores.risque} label="Risque" color={scores.risque >= 60 ? COLORS.danger : scores.risque >= 30 ? COLORS.warning : COLORS.success} />
+          </div>
+        </div>
+
+        {/* Actions rapides */}
+        <div className="mt-4 flex flex-wrap gap-2 border-t pt-4" style={{ borderColor: COLORS.border }}>
+          {p.statut === 'ACTIF' ? (
+            <button disabled={busy} onClick={() => changerStatut('SUSPENDU')} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50" style={{ background: COLORS.danger }}><Ban size={14} /> Suspendre</button>
           ) : (
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>Score non calculé</p>
+            <button disabled={busy} onClick={() => changerStatut('ACTIF')} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50" style={{ background: COLORS.success }}><Play size={14} /> Réactiver</button>
           )}
-        </Card>
-      </div>
-
-      {/* ── KYC ───────────────────────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          {client.kycVerifie
-            ? <ShieldCheck size={16} style={{ color: '#2563EB' }} />
-            : <ShieldAlert size={16} style={{ color: '#D97706' }} />
-          }
-          <SectionTitle>
-            Vérification KYC
-            {docEnAttente > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full text-white text-xs font-bold"
-                style={{ background: '#D97706' }}>
-                {docEnAttente} en attente
-              </span>
-            )}
-          </SectionTitle>
+          {[
+            { icon: FileCheck2, t: 'Forcer KYC' }, { icon: KeyRound, t: 'Reset tentatives' },
+            { icon: Bell, t: 'Notifier' }, { icon: Smartphone, t: 'Bloquer appareil' },
+          ].map((a) => (
+            <button key={a.t} disabled title="Bientôt (incrément suivant)" className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold text-gray-400" style={{ borderColor: COLORS.border }}><a.icon size={14} /> {a.t}</button>
+          ))}
         </div>
-        {client.documentsKYC.length === 0 ? (
-          <Card>
-            <div className="flex items-center gap-3">
-              <Shield size={24} style={{ color: 'var(--muted)' }} />
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>Aucun document KYC soumis.</p>
+      </div>
+
+      {/* ANALYSE AUTOMATIQUE */}
+      <div className="rounded-2xl border p-4" style={{ borderColor: COLORS.opacity(COLORS.primary, 0.25), background: COLORS.opacity(COLORS.primary, 0.04) }}>
+        <div className="mb-2 flex items-center gap-2 text-sm font-black" style={{ color: COLORS.primaryDark }}>🧠 Analyse automatique</div>
+        <div className="grid gap-1.5 sm:grid-cols-2">
+          {analyse.map((a, i) => {
+            const c = a.ton === 'positif' ? COLORS.success : a.ton === 'alerte' ? COLORS.danger : COLORS.text.secondary
+            const Ic = a.ton === 'positif' ? CheckCircle2 : a.ton === 'alerte' ? AlertTriangle : Info
+            return <div key={i} className="flex items-start gap-2 text-sm" style={{ color: COLORS.text.primary }}><Ic size={16} style={{ color: c, marginTop: 1, flexShrink: 0 }} /> {a.texte}</div>
+          })}
+        </div>
+      </div>
+
+      {/* CARTES FINANCIÈRES */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+        <Stat icon={PiggyBank} label="Épargne" value={fcfa(f.soldeEpargne)} color={COLORS.primary} />
+        <Stat icon={Wallet} label="Disponible" value={fcfa(f.soldeDisponible)} color={COLORS.success} />
+        <Stat icon={Coins} label="Total cotisé" value={fcfa(f.totalCotise)} color={COLORS.primary} />
+        <Stat icon={ArrowDownToLine} label="Total retiré" value={fcfa(f.totalRetire)} color={COLORS.danger} />
+        <Stat icon={CreditCard} label="Encours crédit" value={fcfa(f.encoursCredit)} color={COLORS.warning} />
+        <Stat icon={RotateCcw} label="Remboursé" value={fcfa(f.totalRembourse)} color={COLORS.success} />
+      </div>
+
+      {/* ONGLETS */}
+      <div className="flex gap-1 overflow-x-auto border-b" style={{ borderColor: COLORS.border }}>
+        {tabs.map((t) => (
+          <button key={t.k} onClick={() => setTab(t.k)}
+            className="flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 text-sm font-semibold"
+            style={tab === t.k ? { color: COLORS.primary, borderBottom: `2px solid ${COLORS.primary}` } : { color: COLORS.text.secondary }}>
+            <t.icon size={15} /> {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border bg-white p-4" style={{ borderColor: COLORS.border }}>
+        {tab === 'apercu' && (
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Section title={`Tontines (${data.compteurs.tontines})`} rows={data.tontines.map((t) => [t.nom, <Badge key="1" text={t.statut} color={etatColor(t.statut)} />, fcfa(t.soldeActuelFcfa)])} empty="Aucune tontine" />
+            <Section title="Dernières transactions" rows={data.transactions.slice(0, 8).map((t) => [<span key="t" style={{ color: txColor(t.type) }}>{t.type}</span>, dateT(t.creeLe), <span key="m" style={{ color: txColor(t.type), fontWeight: 800 }}>{fcfa(t.montantFcfa)}</span>])} empty="Aucune transaction" />
+          </div>
+        )}
+        {tab === 'financier' && (
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Section title="Retraits" rows={data.retraits.map((r) => [dateT(r.creeLe), <Badge key="s" text={r.statut} color={etatColor(r.statut)} />, fcfa(r.montantFcfa)])} empty="Aucun retrait" />
+            <Section title="Micro-crédits" rows={data.microCredits.map((m) => [dateF(m.creeLe), <Badge key="s" text={m.statut} color={etatColor(m.statut)} />, `${fcfa(m.montantRestantFcfa)} / ${fcfa(m.montantPrincipalFcfa)}`])} empty="Aucun crédit" />
+          </div>
+        )}
+        {tab === 'kyc' && (
+          <Section title="Documents KYC" rows={data.documentsKYC.map((d) => [d.typeDocument, dateF(d.creeLe), <Badge key="s" text={d.statut} color={etatColor(d.statut)} />])} empty="Aucun document soumis" />
+        )}
+        {tab === 'securite' && (
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Section title="Sessions récentes" rows={data.sessions.map((s) => [<span key="ip" className="flex items-center gap-1"><Globe size={13} /> {s.adresseIP || '—'}</span>, dateT(s.derniereUtilisation), <Badge key="a" text={s.actif ? 'active' : 'expirée'} color={s.actif ? COLORS.success : COLORS.text.muted} />])} empty="Aucune session" />
+            <Section title="Appareils" rows={data.appareils.map((a) => [<span key="d" className="flex items-center gap-1"><Smartphone size={13} /> {a.nomAppareil || a.modeleAppareil || 'Appareil'}</span>, a.systemeExploitation || '—', <Badge key="a" text={a.actif ? 'actif' : 'inactif'} color={a.actif ? COLORS.success : COLORS.text.muted} />])} empty="Aucun appareil enregistré" />
+          </div>
+        )}
+        {tab === 'litiges' && (
+          <Section title="Historique des litiges" rows={data.litiges.map((l) => [l.categorie, l.motif?.slice(0, 40), dateF(l.creeLe), <Badge key="s" text={l.statut} color={etatColor(l.statut)} />])} empty="Aucun litige — client sans incident ✅" />
+        )}
+        {tab === 'activite' && (
+          <Section title="Journal d'audit" rows={data.journal.map((j) => [<span key="a" className="font-semibold">{j.action}</span>, j.details?.slice(0, 50), dateT(j.creeLe)])} empty="Aucune activité enregistrée" />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Section({ title, rows, empty }: { title: string; rows: any[][]; empty: string }) {
+  return (
+    <div>
+      <div className="mb-2 text-xs font-black uppercase tracking-wide text-gray-400">{title}</div>
+      {rows.length === 0 ? (
+        <div className="rounded-lg border border-dashed py-6 text-center text-sm text-gray-400" style={{ borderColor: COLORS.border }}>{empty}</div>
+      ) : (
+        <div className="divide-y" style={{ borderColor: COLORS.border }}>
+          {rows.map((cells, i) => (
+            <div key={i} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+              {cells.map((c, j) => (
+                <span key={j} className={j === 0 ? 'flex-1 font-medium' : 'text-right text-gray-600'} style={{ color: j === 0 ? COLORS.text.primary : undefined }}>{c}</span>
+              ))}
             </div>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {client.documentsKYC.map(doc => (
-              <DocKycCard
-                key={doc.id}
-                doc={doc}
-                onValider={() => !loading && validerDoc(doc.id)}
-                onRejeter={() => !loading && setRejetDocId(doc.id)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── Tontines ──────────────────────────────────────────────────────────── */}
-      <div>
-        <SectionTitle>Tontines ({client._count.tontines})</SectionTitle>
-        {client.tontines.length === 0
-          ? <Card><p className="text-sm" style={{ color: 'var(--muted)' }}>Aucune tontine.</p></Card>
-          : (
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
-            {client.tontines.map((t, i) => {
-              const stColor = { ACTIVE: '#2563EB', SUSPENDUE: '#D97706', TERMINEE: '#9CA3AF', CREATION: '#1A56DB' }[t.statut] ?? '#9CA3AF'
-              return (
-                <div key={t.id} className="flex items-center gap-3 px-5 py-3.5 border-b last:border-0"
-                  style={{ borderColor: '#E2E8F0' }}>
-                  <span className="text-xl shrink-0">{t.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate" style={{ color: 'var(--foreground)' }}>{t.nom}</p>
-                    <p className="text-xs" style={{ color: 'var(--muted)' }}>{t.type}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-black text-sm" style={{ color: 'var(--primary)', fontVariantNumeric: 'tabular-nums' }}>
-                      {fmtFcfa(t.soldeActuelFcfa)}
-                    </p>
-                    <span className="text-xs font-bold" style={{ color: stColor }}>{t.statut}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ── Transactions récentes ─────────────────────────────────────────────── */}
-      <div>
-        <SectionTitle>Dernières transactions</SectionTitle>
-        {client.transactions.length === 0
-          ? <Card><p className="text-sm" style={{ color: 'var(--muted)' }}>Aucune transaction.</p></Card>
-          : (
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
-                    {['Type', 'Montant', 'Opérateur', 'Statut', 'Date'].map(h => (
-                      <th key={h} className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide"
-                        style={{ color: 'var(--muted)' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {client.transactions.map(tx => (
-                    <tr key={tx.id} style={{ borderBottom: '1px solid #E2E8F0' }}>
-                      <td className="px-5 py-3 text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{tx.type}</td>
-                      <td className="px-5 py-3 text-sm font-black" style={{ color: tx.type === 'RETRAIT' ? '#DC2626' : '#2563EB', fontVariantNumeric: 'tabular-nums' }}>
-                        {fmtFcfa(tx.montantFcfa)}
-                      </td>
-                      <td className="px-5 py-3 text-sm" style={{ color: 'var(--muted)' }}>{tx.operateur}</td>
-                      <td className="px-5 py-3">
-                        <span className="text-xs font-bold px-2 py-1 rounded-full"
-                          style={{ background: tx.statut === 'SUCCES' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)', color: tx.statut === 'SUCCES' ? '#2563EB' : '#DC2626' }}>
-                          {tx.statut}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-sm" style={{ color: 'var(--muted)' }}>{fmtDate(tx.creeLe)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Micro-crédits ─────────────────────────────────────────────────────── */}
-      {client.microCredits.length > 0 && (
-        <div>
-          <SectionTitle>Micro-crédits</SectionTitle>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {client.microCredits.map(c => {
-              const progress = c.montantPrincipalFcfa > 0
-                ? (1 - c.montantRestantFcfa / c.montantPrincipalFcfa)
-                : 0
-              const stColor = { ACTIF: '#7C3AED', TERMINE: '#2563EB', EN_DEFAUT: '#DC2626', EN_ATTENTE: '#D97706', REFUSE: '#9CA3AF' }[c.statut] ?? '#9CA3AF'
-              return (
-                <Card key={c.id} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-base" style={{ color: 'var(--foreground)', fontVariantNumeric: 'tabular-nums' }}>
-                      {fmtFcfa(c.montantPrincipalFcfa)}
-                    </span>
-                    <Pill label={c.statut} color={stColor} bg={`${stColor}18`} />
-                  </div>
-                  {c.statut === 'ACTIF' && (
-                    <>
-                      <div className="flex justify-between text-xs" style={{ color: 'var(--muted)' }}>
-                        <span>Restant : {fmtFcfa(c.montantRestantFcfa)}</span>
-                        <span>{Math.round(progress * 100)}% remboursé</span>
-                      </div>
-                      <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: '#F3F4F6' }}>
-                        <div className="h-full rounded-full" style={{ width: `${progress * 100}%`, background: '#7C3AED' }} />
-                      </div>
-                      {c.dateEcheance && (
-                        <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                          Échéance : {fmtDate(c.dateEcheance)}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </Card>
-              )
-            })}
-          </div>
+          ))}
         </div>
       )}
-
     </div>
   )
 }
