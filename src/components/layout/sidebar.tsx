@@ -7,7 +7,7 @@ import {
   CreditCard, Scale, Banknote, Bell, LogOut,
   ChevronLeft, ChevronRight, ShieldCheck, FileText,
   UserCheck, MapPin, AlertTriangle, ClipboardList, BarChart3,
-  Receipt, Settings, Inbox,
+  Receipt, Settings, Inbox, Activity,
 } from 'lucide-react'
 import { logout } from '@/lib/auth'
 import { useState } from 'react'
@@ -50,6 +50,7 @@ const NAV_GROUPS = [
   {
     label: 'Système',
     items: [
+      { href: '/sante',         icon: Activity,        label: 'Santé système' },
       { href: '/rapports',      icon: BarChart3,       label: 'Rapports' },
       { href: '/audit',         icon: ClipboardList,   label: 'Audit' },
       { href: '/notifications', icon: Bell,            label: 'Notifications' },
