@@ -7,7 +7,7 @@ import {
   CreditCard, Scale, Banknote, Bell, LogOut,
   ChevronLeft, ChevronRight, ShieldCheck, FileText,
   UserCheck, MapPin, AlertTriangle, ClipboardList, BarChart3,
-  Receipt, Settings,
+  Receipt, Settings, Inbox,
 } from 'lucide-react'
 import { logout } from '@/lib/auth'
 import { useState } from 'react'
@@ -16,6 +16,7 @@ const NAV_GROUPS = [
   {
     label: 'Vue générale',
     items: [
+      { href: '/action-center', icon: Inbox,           label: "Centre d'action", badge: '★' },
       { href: '/dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
       { href: '/alertes',       icon: AlertTriangle,   label: 'Alertes',      badge: 'LIVE' },
     ],
