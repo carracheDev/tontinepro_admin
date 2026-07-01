@@ -118,3 +118,16 @@ export function DataTable<T>({
 export function Badge({ text, color }: { text: string; color: string }) {
   return <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold" style={{ background: COLORS.opacity(color, 0.12), color }}>{text}</span>
 }
+
+/** Carte KPI épurée (Design System) — remplace les cartes à faux %. */
+export function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: string | number; color: string }) {
+  return (
+    <div className="rounded-2xl border bg-white p-5 transition-shadow hover:shadow-md" style={{ borderColor: COLORS.border }}>
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: COLORS.opacity(color, 0.12) }}>
+        <Icon size={20} style={{ color }} strokeWidth={1.9} />
+      </div>
+      <div className="text-3xl font-black leading-none tabular-nums" style={{ color }}>{value}</div>
+      <div className="mt-1.5 text-sm font-semibold" style={{ color: COLORS.text.secondary }}>{label}</div>
+    </div>
+  )
+}

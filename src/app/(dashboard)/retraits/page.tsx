@@ -4,6 +4,7 @@ import useSWR from 'swr'
 import { useState } from 'react'
 import { api, extraireErreur } from '@/lib/api'
 import { COLORS } from '@/lib/colors'
+import { StatCard } from '@/components/ui/data-table'
 import {
   CheckCircle, XCircle, Clock, AlertTriangle,
   Wallet, TrendingUp, Timer, BadgeCheck,
@@ -147,57 +148,12 @@ export default function RetraitsPage() {
       {/* Modal rejet */}
       {rejetId && <ModalRejet onClose={() => setRejetId(null)} onConfirm={(m) => rejeter(rejetId, m)} />}
 
-      {/* KPIs — Design moderne — CHARTE COHÉRENTE */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { titre: 'Total retraits', valeur: apercu?.compteurs?.total ?? 0, icone: BadgeCheck, couleur: COLORS.primary, trend: 0 },
-          { titre: 'En attente', valeur: retraits.length, icone: Clock, couleur: COLORS.warning, trend: retraits.length > 5 ? 18 : -3 },
-          { titre: 'Volume en attente', valeur: fmtFcfa(totalEnAttente), icone: Wallet, couleur: COLORS.warning, trend: 22 },
-          { titre: 'Montant max', valeur: fmtFcfa(montantMax), icone: TrendingUp, couleur: COLORS.danger, trend: 7 },
-        ].map(({ titre, valeur, icone: Icon, couleur, trend }) => (
-          <div
-            key={titre}
-            className="rounded-2xl p-6 transition-all"
-            style={{
-              background: '#FFFFFF',
-              border: `1px solid ${couleur}15`,
-              boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.boxShadow = `0 12px 32px ${couleur}18`
-              ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)'
-              ;(e.currentTarget as HTMLDivElement).style.borderColor = `${couleur}35`
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(15,23,42,0.06)'
-              ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
-              ;(e.currentTarget as HTMLDivElement).style.borderColor = `${couleur}15`
-            }}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${couleur}12` }}>
-                <Icon size={22} style={{ color: couleur }} strokeWidth={1.8} />
-              </div>
-              {trend !== 0 && (
-                <div
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold"
-                  style={{
-                    background: trend > 0 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)',
-                    color: trend > 0 ? '#EF4444' : '#10B981',
-                  }}
-                >
-                  {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
-                </div>
-              )}
-            </div>
-            <p className="text-4xl font-black leading-none mb-2" style={{ color: couleur, fontVariantNumeric: 'tabular-nums' }}>
-              {valeur}
-            </p>
-            <p className="text-sm font-bold" style={{ color: '#0F172A' }}>
-              {titre}
-            </p>
-          </div>
-        ))}
+      {/* KPIs — Design System épuré */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={BadgeCheck} label="Total retraits" value={apercu?.compteurs?.total ?? 0} color={COLORS.primary} />
+        <StatCard icon={Clock} label="En attente" value={retraits.length} color={COLORS.warning} />
+        <StatCard icon={Wallet} label="Volume en attente" value={fmtFcfa(totalEnAttente)} color={COLORS.warning} />
+        <StatCard icon={TrendingUp} label="Montant max" value={fmtFcfa(montantMax)} color={COLORS.danger} />
       </div>
 
       {/* Courbe volume 7 jours — MODERNE */}
