@@ -2,8 +2,9 @@
 
 import useSWR from 'swr'
 import { useState } from 'react'
+import Link from 'next/link'
 import { api, extraireErreur } from '@/lib/api'
-import { Scale, CheckCircle, XCircle, Eye } from 'lucide-react'
+import { Scale, CheckCircle, XCircle, Eye, ArrowRight } from 'lucide-react'
 
 const fetcher = (url: string) => api.get(url).then(r => r.data?.donnees ?? r.data)
 
@@ -152,6 +153,10 @@ export default function LitigesPage() {
                 <p className="text-sm p-3 rounded-xl" style={{ background: '#F8FAFC', color: 'var(--foreground)' }}>
                   {l.motif}
                 </p>
+
+                <Link href={`/litiges/${l.id}`} className="inline-flex items-center gap-1 text-sm font-bold" style={{ color: 'var(--primary)' }}>
+                  Ouvrir le dossier complet <ArrowRight size={14} />
+                </Link>
 
                 {/* Actions selon statut */}
                 {l.statut === 'OUVERT' && (
