@@ -81,7 +81,7 @@ function ModalRejet({ onClose, onConfirm }: { onClose: () => void; onConfirm: (m
 
 export default function RetraitsPage() {
   const { data, mutate, isLoading } = useSWR('/retraits/en-attente', fetcher, { refreshInterval: 15_000 })
-  const { data: historique } = useSWR('/retraits/mes-retraits?limite=100', fetcher)
+  const { data: apercu } = useSWR('/retraits/apercu-admin', fetcher, { refreshInterval: 15_000 })
 
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [rejetId, setRejetId] = useState<string | null>(null)
@@ -94,7 +94,7 @@ export default function RetraitsPage() {
   const montantMax = retraits.length > 0 ? Math.max(...retraits.map(r => r.montantFcfa)) : 0
 
   // Historique en courbe — 7 derniers jours
-  const listHisto: Retrait[] = Array.isArray(historique) ? historique : historique?.retraits ?? []
+  const listHisto: Retrait[] = apercu?.recents ?? []
   const areaData = Array.from({ length: 7 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() - (6 - i))
@@ -150,10 +150,10 @@ export default function RetraitsPage() {
       {/* KPIs — Design moderne — CHARTE COHÉRENTE */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
+          { titre: 'Total retraits', valeur: apercu?.compteurs?.total ?? 0, icone: BadgeCheck, couleur: COLORS.primary, trend: 0 },
           { titre: 'En attente', valeur: retraits.length, icone: Clock, couleur: COLORS.warning, trend: retraits.length > 5 ? 18 : -3 },
           { titre: 'Volume en attente', valeur: fmtFcfa(totalEnAttente), icone: Wallet, couleur: COLORS.warning, trend: 22 },
           { titre: 'Montant max', valeur: fmtFcfa(montantMax), icone: TrendingUp, couleur: COLORS.danger, trend: 7 },
-          { titre: 'Seuil validation', valeur: '50 000 FCFA', icone: BadgeCheck, couleur: COLORS.primary, trend: 0 },
         ].map(({ titre, valeur, icone: Icon, couleur, trend }) => (
           <div
             key={titre}
