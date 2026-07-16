@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { api, extraireErreur } from '@/lib/api'
 import {
   FileText, CheckCircle2, Send, XCircle, Clock,
-  ChevronRight, BarChart2, Download,
+  ChevronRight, BarChart2, Download, Eye, X, ShieldCheck, ShieldAlert,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -59,6 +59,11 @@ export default function PadmePage() {
 
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [filtreStatut, setFiltreStatut] = useState('')
+  // Dossier ouvert dans le panneau de détail (null = fermé)
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const { data: detail, isLoading: detailLoading } = useSWR(
+    detailId ? `/padme/${detailId}` : null, fetcher,
+  )
   const [toast, setToast] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   const dossiers: DossierPADME[] = Array.isArray(data) ? data : data?.dossiers ?? []
@@ -293,6 +298,12 @@ export default function PadmePage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
+                      {/* Consulter le dossier complet avant de décider */}
+                      <button onClick={() => setDetailId(d.id)}
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                        style={{ background: '#F1F5F9', color: '#0F172A' }}>
+                        <Eye size={13} /> Voir le dossier
+                      </button>
                       {d.statut === 'GENERE' && (
                         <button onClick={() => validerAdmin(d.id)} disabled={loadingId === d.id}
                           className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40 transition-opacity"
@@ -335,6 +346,172 @@ export default function PadmePage() {
           })}
         </div>
       </div>
+
+      {/* ═══ Panneau de détail — dossier complet ═══ */}
+      {detailId && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0" style={{ background: 'rgba(15,23,42,0.45)' }}
+            onClick={() => setDetailId(null)} />
+          <div className="relative h-full w-full max-w-2xl overflow-y-auto"
+            style={{ background: '#FFFFFF', boxShadow: '-8px 0 40px rgba(15,23,42,0.18)' }}>
+
+            {detailLoading || !detail ? (
+              <div className="p-8 text-sm" style={{ color: '#9CA3B8' }}>Chargement du dossier…</div>
+            ) : (() => {
+              const cfg = STATUT_CONFIG[detail.statut] ?? STATUT_CONFIG.GENERE
+              const sc = detail.scoreCredit ?? {}
+              const pts = {
+                reg: Math.round((sc.tauxRegularite ?? 0) * 40),
+                anc: Math.min((sc.totalMois ?? 0) * 2, 20),
+                remb: Math.round((sc.scoreRemboursement ?? 0) * 30),
+              }
+              return (
+                <>
+                  {/* En-tête */}
+                  <div className="sticky top-0 px-6 py-5 flex items-start gap-4"
+                    style={{ background: '#1E3A8A', color: '#fff' }}>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center font-black shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.18)' }}>
+                      {(detail.client?.nom ?? 'C').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-lg leading-tight">{detail.client?.nom ?? '—'}</p>
+                      <p className="text-sm opacity-80">{detail.client?.telephone}</p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <Pill label={cfg.label} color="#fff" bg="rgba(255,255,255,0.2)" />
+                        {detail.client?.kycVerifie
+                          ? <span className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md"
+                              style={{ background: 'rgba(16,185,129,0.25)' }}><ShieldCheck size={12} /> KYC vérifié</span>
+                          : <span className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md"
+                              style={{ background: 'rgba(239,68,68,0.25)' }}><ShieldAlert size={12} /> KYC non vérifié</span>}
+                      </div>
+                    </div>
+                    <button onClick={() => setDetailId(null)} className="p-2 rounded-lg shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.15)' }}><X size={16} /></button>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                    {/* Score détaillé */}
+                    <section>
+                      <h4 className="font-black text-sm mb-3" style={{ color: '#0F172A' }}>
+                        Score de crédit — {detail.scoreAuMoment}/100 au moment du dossier
+                      </h4>
+                      <div className="rounded-xl p-4 space-y-2.5" style={{ background: '#F8FAFC' }}>
+                        {[
+                          ['Régularité des cotisations', `${Math.round((sc.tauxRegularite ?? 0) * 100)} %`, pts.reg, 40],
+                          ['Historique de remboursement', `${Math.round((sc.scoreRemboursement ?? 0) * 100)} %`, pts.remb, 30],
+                          ['Ancienneté', `${sc.totalMois ?? 0} mois`, pts.anc, 20],
+                        ].map(([lab, val, p, max]) => (
+                          <div key={String(lab)}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span style={{ color: '#0F172A' }} className="font-semibold">{lab}</span>
+                              <span style={{ color: '#64748B' }}>{val} · <b style={{ color: '#2563EB' }}>{p}/{max} pts</b></span>
+                            </div>
+                            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
+                              <div className="h-full rounded-full"
+                                style={{ width: `${(Number(p) / Number(max)) * 100}%`, background: '#2563EB' }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-md"
+                          style={{ background: sc.eligiblePADME ? 'rgba(22,163,74,0.12)' : '#F3F4F6',
+                                   color: sc.eligiblePADME ? '#16A34A' : '#9CA3B8' }}>
+                          {sc.eligiblePADME ? '✓' : '✕'} Éligible PADME (≥ 70)
+                        </span>
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-md"
+                          style={{ background: sc.eligibleMicroCredit ? 'rgba(22,163,74,0.12)' : '#F3F4F6',
+                                   color: sc.eligibleMicroCredit ? '#16A34A' : '#9CA3B8' }}>
+                          {sc.eligibleMicroCredit ? '✓' : '✕'} Éligible micro-crédit (≥ 60)
+                        </span>
+                      </div>
+                    </section>
+
+                    {/* Chiffres du dossier */}
+                    <section>
+                      <h4 className="font-black text-sm mb-3" style={{ color: '#0F172A' }}>Le dossier</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          ['Épargne totale constituée', `${(detail.totalEpargneFcfa ?? 0).toLocaleString('fr-FR')} FCFA`],
+                          ['Montant souhaité', detail.montantSouhaite != null ? `${detail.montantSouhaite.toLocaleString('fr-FR')} FCFA` : '—'],
+                          ['Crédits déjà remboursés', `${detail.creditsRembourses ?? 0}`],
+                          ['Taux de régularité', `${Math.round((detail.tauxRegularite ?? 0) * 100)} %`],
+                        ].map(([lab, val]) => (
+                          <div key={lab} className="rounded-xl p-3" style={{ background: '#F8FAFC' }}>
+                            <p className="text-xs mb-1" style={{ color: '#9CA3B8' }}>{lab}</p>
+                            <p className="font-black text-sm" style={{ color: '#0F172A' }}>{val}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* Activité + objet */}
+                    <section className="space-y-3">
+                      <div>
+                        <p className="text-xs font-bold mb-1" style={{ color: '#9CA3B8' }}>OBJET DU CRÉDIT</p>
+                        <p className="text-sm" style={{ color: '#0F172A' }}>{detail.objetCredit ?? '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold mb-1" style={{ color: '#9CA3B8' }}>ACTIVITÉ DÉCLARÉE</p>
+                        <p className="text-sm leading-relaxed" style={{ color: '#0F172A' }}>
+                          {detail.descriptionActivite ?? '—'}
+                        </p>
+                      </div>
+                    </section>
+
+                    {/* Traçabilité */}
+                    <section>
+                      <h4 className="font-black text-sm mb-3" style={{ color: '#0F172A' }}>Suivi</h4>
+                      <div className="space-y-2">
+                        {[
+                          ['Dossier généré', detail.creeLe, `par ${detail.genereePar ?? '—'}`],
+                          ['Soumis à PADME', detail.soumisLe, ''],
+                          ['Examiné', detail.examineLE, ''],
+                        ].filter(([, d]) => d).map(([lab, d, extra]) => (
+                          <div key={String(lab)} className="flex items-center gap-2 text-xs">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#2563EB' }} />
+                            <span className="font-semibold" style={{ color: '#0F172A' }}>{lab}</span>
+                            <span style={{ color: '#9CA3B8' }}>{fmtDate(String(d))} {extra}</span>
+                          </div>
+                        ))}
+                        <div className="flex items-center gap-2 text-xs">
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#CBD5E1' }} />
+                          <span className="font-semibold" style={{ color: '#0F172A' }}>Client inscrit</span>
+                          <span style={{ color: '#9CA3B8' }}>{detail.client?.creeLe ? fmtDate(detail.client.creeLe) : '—'}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Décider depuis le panneau */}
+                    <section className="flex flex-wrap gap-2 pt-2" style={{ borderTop: '1px solid #F1F5F9' }}>
+                      <button onClick={() => exporterPdf(detail.id)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold mt-4"
+                        style={{ background: '#F3F4F6', color: '#0F172A' }}>
+                        <Download size={13} /> Télécharger le PDF
+                      </button>
+                      {detail.statut === 'GENERE' && (
+                        <button onClick={async () => { await validerAdmin(detail.id); setDetailId(null) }}
+                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-white mt-4"
+                          style={{ background: '#1A56DB' }}>
+                          <CheckCircle2 size={13} /> Valider le dossier
+                        </button>
+                      )}
+                      {detail.statut === 'VALIDE_ADMIN' && (
+                        <button onClick={async () => { await soumettrePADME(detail.id); setDetailId(null) }}
+                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-white mt-4"
+                          style={{ background: '#D97706' }}>
+                          <Send size={13} /> Marquer soumis à PADME
+                        </button>
+                      )}
+                    </section>
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

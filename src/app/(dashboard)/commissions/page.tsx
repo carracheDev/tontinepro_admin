@@ -2,11 +2,11 @@
 
 import useSWR from 'swr'
 import { api } from '@/lib/api'
-import { Banknote, TrendingUp, Users } from 'lucide-react'
+import { Banknote, TrendingUp, Wallet } from 'lucide-react'
 import { COLORS } from '@/lib/colors'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, CartesianGrid,
+  ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts'
 
 const fetcher = (url: string) => api.get(url).then(r => r.data?.donnees ?? r.data)
@@ -25,17 +25,35 @@ export default function CommissionsPage() {
   const donnees = Array.isArray(revenus) ? revenus : []
   const collecteurs = Array.isArray(perf) ? perf : []
 
-  const totalCommissions = donnees.reduce((s: number, d: { commissions: number }) => s + d.commissions, 0)
+  const total6Mois = donnees.reduce((s: number, d: { total: number }) => s + (d.total ?? 0), 0)
 
   return (
     <div className="space-y-6 max-w-350">
-      {/* KPIs modernes */}
+      {/* Revenus réels de la plateforme */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
-          { titre: 'Commissions versées', valeur: kpis?.revenusCommissions ?? 0, icone: Banknote, couleur: COLORS.primary, trend: 18 },
-          { titre: '6 derniers mois', valeur: totalCommissions, icone: TrendingUp, couleur: COLORS.info, trend: 22 },
-          { titre: 'Taux commission', valeur: kpis?.tauxCommission ?? '0%', icone: Users, couleur: COLORS.warning, trend: 0 },
-        ].map(({ titre, valeur, icone: Icon, couleur, trend }) => (
+          {
+            titre: 'Revenus totaux',
+            sous: 'Frais de retrait + intérêts encaissés',
+            valeur: kpis?.revenusTotal ?? 0,
+            icone: Banknote,
+            couleur: COLORS.primary,
+          },
+          {
+            titre: 'Frais de retrait',
+            sous: 'Barème progressif · 100 % plateforme',
+            valeur: kpis?.revenusRetraits ?? 0,
+            icone: Wallet,
+            couleur: COLORS.info,
+          },
+          {
+            titre: 'Intérêts micro-crédit',
+            sous: `Taux ${kpis?.tauxInteret ?? '10%'} sur crédits décaissés`,
+            valeur: kpis?.revenusMicroCredits ?? 0,
+            icone: TrendingUp,
+            couleur: COLORS.warning,
+          },
+        ].map(({ titre, sous, valeur, icone: Icon, couleur }) => (
           <div
             key={titre}
             className="rounded-2xl p-6 transition-all"
@@ -59,23 +77,15 @@ export default function CommissionsPage() {
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${couleur}12` }}>
                 <Icon size={22} style={{ color: couleur }} strokeWidth={1.8} />
               </div>
-              {trend !== 0 && (
-                <div
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold"
-                  style={{
-                    background: trend > 0 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)',
-                    color: trend > 0 ? '#EF4444' : '#10B981',
-                  }}
-                >
-                  {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
-                </div>
-              )}
             </div>
             <p className="text-4xl font-black leading-none mb-2" style={{ color: couleur, fontVariantNumeric: 'tabular-nums' }}>
               {typeof valeur === 'number' ? fmtFcfa(valeur) : valeur}
             </p>
             <p className="text-sm font-bold" style={{ color: '#0F172A' }}>
               {titre}
+            </p>
+            <p className="text-xs mt-1" style={{ color: '#9CA3B8' }}>
+              {sous}
             </p>
           </div>
         ))}
@@ -93,10 +103,10 @@ export default function CommissionsPage() {
         <div className="flex items-start justify-between mb-6">
           <div>
             <h3 className="font-black text-base" style={{ color: '#0F172A' }}>
-              Évolution commissions
+              Évolution des revenus
             </h3>
             <p className="text-sm mt-2" style={{ color: '#9CA3B8' }}>
-              6 derniers mois
+              6 derniers mois · {fmtFcfa(total6Mois)} encaissés
             </p>
           </div>
         </div>
@@ -124,11 +134,54 @@ export default function CommissionsPage() {
                 formatter={(v) => [fmtFcfa(Number(v)), '']}
                 cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
               />
-              <Bar dataKey="commissions" name="Cotisations" fill="url(#gComm)" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="padme" name="PADME" fill="url(#gPadme)" radius={[6, 6, 0, 0]} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+              <Bar dataKey="fraisRetraits" stackId="r" name="Frais de retrait" fill="url(#gComm)" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="interetsMicroCredit" stackId="r" name="Intérêts micro-crédit" fill="url(#gPadme)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
+      </div>
+
+      {/* Barème officiel — d'où vient le revenu */}
+      <div
+        className="rounded-2xl p-6"
+        style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', boxShadow: '0 2px 8px rgba(15,23,42,0.06)' }}
+      >
+        <h3 className="font-black text-base mb-1" style={{ color: '#0F172A' }}>
+          Barème des frais de retrait
+        </h3>
+        <p className="text-sm mb-5" style={{ color: '#9CA3B8' }}>
+          Montants fixes par tranche · urgence = frais × 2 · 100 % plateforme · cotisation gratuite (0 %)
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ color: '#64748B' }}>
+                <th className="text-left font-bold py-2">Montant retiré</th>
+                <th className="text-right font-bold py-2">TontineBénin</th>
+                <th className="text-right font-bold py-2">MTN / Moov</th>
+                <th className="text-right font-bold py-2">Économie</th>
+              </tr>
+            </thead>
+            <tbody style={{ color: '#0F172A' }}>
+              {[
+                ['≤ 5 000 FCFA', '100 F', '125 F', '25 F'],
+                ['≤ 10 000 FCFA', '200 F', '225 F', '25 F'],
+                ['≤ 20 000 FCFA', '350 F', '375 F', '25 F'],
+                ['≤ 50 000 FCFA', '650 F', '700 F', '50 F'],
+                ['≤ 100 000 FCFA', '900 F', '1 000 F', '100 F'],
+                ['≤ 200 000 FCFA', '1 800 F', '2 000 F', '200 F'],
+              ].map(([m, nous, mtn, eco]) => (
+                <tr key={m} style={{ borderTop: '1px solid #F1F5F9' }}>
+                  <td className="py-2.5 font-semibold">{m}</td>
+                  <td className="py-2.5 text-right font-bold" style={{ color: COLORS.primary }}>{nous}</td>
+                  <td className="py-2.5 text-right" style={{ color: '#9CA3B8' }}>{mtn}</td>
+                  <td className="py-2.5 text-right font-bold" style={{ color: '#10B981' }}>−{eco}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Top collecteurs */}
